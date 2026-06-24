@@ -1,12 +1,17 @@
-from qiskit import QuantumCircuit
-from qiskit.quantum_info import Statevector
-from qiskit_aer import AerSimulator
-
+import qutip
+import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 N = 100
 
-base_possible = ["rectiligne", "diagonal"]
+# Créer un vecteur (qutip.basis(X, Y) avec X = dimension, Y = bit assoié):
+H = qutip.basis(2, 0) # Horizontal
+V = qutip.basis(2, 1) # Vertical
+
+# Mise en état de superposition (45 et -45°)
+D = ((H+V) / np.sqrt(2)).unit() 
+DM = ((H-V) / np.sqrt(2)).unit()
 
 base_emission = []
 base_reception = []
@@ -25,12 +30,14 @@ qber_score = 0
 # Hadamard door : Convertir la base (rectiligne to diagnoal)
 # 
 
+
+
+
 #------------------------------------------------
 
 # Création de N photons
 # QuantumCircuit(Nmoibre de qubit, nombre de bits classqiue [pour le mesurer])
 # Dans notre cas, on va utiliser qu'un seul qubit a chaque fois (je crois)
-
 for i in range(N):
 
     #-------------------------------------------------------------
@@ -88,7 +95,6 @@ for i in range(N):
 for i in range(N):
     if(base_emission[i] == base_reception[i]):
         bits_valables.append(i)
-
 
 #-------------------------------------------------------------
 # Calcul QBER
