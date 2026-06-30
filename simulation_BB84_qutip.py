@@ -103,7 +103,7 @@ def Eve(sended_state):
 #|__   _|       | |_) | (_) | |_) |
 #   |_|(_)      |____/ \___/|_.__/ 
 def Bob(sended_state):
-        # First, alice chose a random bit and a random basis
+    # First, alice chose a random bit and a random basis
     bob_basis = rng(0, 1)
     bob_bases.append(bob_basis)
 
