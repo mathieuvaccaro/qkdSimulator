@@ -27,7 +27,7 @@ STATES = {
     (0, 0): H,    # bit 0, rectiligne
     (1, 0): V,    # bit 1, rectiligne
     (0, 1): D,    # bit 0, diagonale
-    (1, 1): DM,   # bit 1, diagonale   (ton |A>)
+    (1, 1): DM,   # bit 1, diagonale
 }
 
 alice_bases = []

@@ -1,4 +1,9 @@
 import threading
+import sys
+import os
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # To import apd module :(
+
 from apd import Apd
 
 
@@ -29,10 +34,9 @@ def test_without_delay():
 
 
 def test_without_huge_deadtime():
-    apd0 = Apd(0, clock_period=10, gate_off_duration=0,
-               gate_on_duration=1000, dead_time=3000)
-    apd1 = Apd(1, clock_period=10, gate_off_duration=0,
-               gate_on_duration=1000, dead_time=3000)
+    apd0 = Apd(0, 60, 0.01, 57, 8, 0.000098, 0.000002, 0.0005)
+    #apd0 = Apd(0, clock_period=10, gate_off_duration=0, gate_on_duration=1000, dead_time=3000)
+    apd1 = Apd(1, clock_period=10, gate_off_duration=0, gate_on_duration=1000, dead_time=3000)
     apd0.run()
     apd1.run()
 

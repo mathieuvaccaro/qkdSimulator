@@ -1,6 +1,7 @@
 import threading
 import time
 import clock  # We use clock.py
+import receiver
 from utils.colors import bcolors
 
 # Class APD represents an avalanche photodiode in Gated Mode.
@@ -132,6 +133,7 @@ class Apd:
             else:
                 print(bcolors.OKGREEN +
                       f"Photon correctly detected ({self.linked_bit})!" + bcolors.ENDC)
+                receiver.add_bits(self.linked_bit)
                 self.dead_time_elapsed = 0  # start the dead time
 
     # Start the simulation: launches the (single) internal clock.
