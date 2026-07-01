@@ -65,6 +65,9 @@ class Apd:
         # If dead_time_elapsed <  dead_time -> currently in dead time.
         self.dead_time_elapsed = self.dead_time
 
+    def set_receiver(self, receiver):
+        self.receiver = receiver
+
     # Create the clock, subscribe the per-tick callbacks and start it
     def start_clock(self):
         self.clk = clock.Clock(self.clock_period)
@@ -73,6 +76,9 @@ class Apd:
         self.clk.subscribe(self.update_mode)
         self.clk.subscribe(self.update_dead_time)
         self.clk.start()
+
+    def stop_clock(self):
+        self.clk.stop
 
     # Switch between linear and geiger mode depending on the bias voltage
     def update_mode(self):
@@ -133,7 +139,7 @@ class Apd:
             else:
                 print(bcolors.OKGREEN +
                       f"Photon correctly detected ({self.linked_bit})!" + bcolors.ENDC)
-                receiver.add_bits(self.linked_bit)
+                self.receiver.add_bits(self.linked_bit)
                 self.dead_time_elapsed = 0  # start the dead time
 
     # Start the simulation: launches the (single) internal clock.
