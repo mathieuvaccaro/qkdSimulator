@@ -13,7 +13,10 @@ class QuantumCanal:
     def setSender(self, sender):
         self.sender = sender
 
-    def send_qubit(self, qubit):
+    def setEve(self, eve):
+        self.eve = eve
+
+    def send_qubit(self, qubit, from_eve = False):
         if(random.randint(0, 100) >= noise):
             self.receiver.receive_qubits(qubit)
         else:

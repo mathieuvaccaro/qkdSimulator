@@ -5,10 +5,12 @@ import clock
 import settings
 import numpy as np
 import qutip
+import threading
 
 # It's very difficult to emit only one photon, one of method is to use attenuate laser.
 # In this simulation, we will simulate that by a average factor of emitted photon (perfectly 1)
 class Sender:
+    communication_en_cours = False
     message_size = settings.message_size
 
     H = qutip.basis(2, 0)
@@ -30,6 +32,8 @@ class Sender:
         self.sending_bits = []
         self.clk = clk
         self.clk.subscribe(self.creating_qubit)
+        self.communication_finished = threading.Event()   # <-- Permet au main de savoir quand c'est terminé
+
 
     def start_new_communication(self):
         self.sending_basis = []
@@ -38,6 +42,7 @@ class Sender:
     def creating_qubit(self):
         if self.bit_number == 0:
             print(bcolors.OKBLUE + "[SENDER] - Start communication" + bcolors.ENDC)
+            self.communication_en_cours = True
         
         bit = rng(0, 1)
         basis = rng(0, 1)
@@ -51,14 +56,9 @@ class Sender:
 
         self.bit_number += 1
         if self.bit_number == self.message_size:
-            #self.bit_number = 0 # Just in case
-            #self.start_new_communication() # Just in case
             print(bcolors.OKBLUE + "[SENDER] END OF COMMUNICATION" + bcolors.ENDC)
-
-
+            self.communication_en_cours = False
+            self.communication_finished.set()   # débloque ceux qui attendent
 
     def send_qubit(self, qubit):
         self.quantum_channel.send_qubit(qubit)
-
-    def get_last_sifting_info(self):
-        return (self.sending_basis, self.sending_bits)

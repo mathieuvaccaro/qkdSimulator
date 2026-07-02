@@ -5,6 +5,9 @@ import receiver
 import apd
 import settings
 import threading
+import sifting
+from utils.colors import bcolors
+import qber
 
 def init_communication():
     print("Initialisation en cours...")
@@ -44,5 +47,29 @@ def init_communication():
     apd0.start_clock()
     apd1.start_clock()
     commune_clk.start()
+
+    # Wait the end of communciation
+    Alice.communication_finished.wait()   # bloque jusqu'à la fin de la comm
+    Bob.communication_finished.wait()
+
+    print("Echange terminé, place au sifting")
+
+    keyAlice = sifting.sifting(Alice, Bob.receiver_basis) # For now, we don't simulate alice and bob basis communication (because is on public channel)
+    keyBob = sifting.sifting(Bob, Alice.sending_basis)
+
+    if(keyAlice != keyBob):
+        print(bcolors.WARNING + "[ERROR] Alice and bob havn't same keys !")
+        return False
+    else:
+        print(bcolors.OKGREEN + "[GOOD] Alice and bob have same keys !")
+
+    print("Sifitng terminé, place au QBER")
+
+    qber_value = qber.qber_calculus(keyAlice, keyBob)
+
+    if(qber_value < settings.qber_tolerance):
+        print(bcolors.OKGREEN + f"[GOOD] Alice and Bob have a good qber value ({qber_value})%")
+    else:
+        print(bcolors.WARNING + f"Qber is very high : {qber_value}. Communication aborting ...")
 
 init_communication()
