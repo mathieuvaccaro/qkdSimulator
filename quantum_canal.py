@@ -1,10 +1,7 @@
 import random
-import receiver
+import qutip
 import settings
-
-# Quantum channel isn't a perfect channel
-
-noise = settings.quantum_canal_noise # in %
+from utils.colors import bcolors
 
 class QuantumCanal:
     def setReceiver(self, receiver):
@@ -13,11 +10,16 @@ class QuantumCanal:
     def setSender(self, sender):
         self.sender = sender
 
-    def setEve(self, eve):
-        self.eve = eve
+    def setInterceptor(self, interceptor):
+        self.interceptor = interceptor
 
     def send_qubit(self, qubit, from_eve = False):
-        if(random.randint(0, 100) >= noise):
-            self.receiver.receive_qubits(qubit)
+        # Eve is present, so receiver is maybe eve (or bob)
+        cible = self.interceptor if (settings.eve_present and not(from_eve)) else self.receiver
+        random_value = random.randint(0, 100)
+        if(random_value < settings.quantum_canal_bit_loss):
+            pass
+        elif(random_value < settings.quantum_canal_bit_flip + settings.quantum_canal_bit_loss):
+            cible.receive_qubit(qutip.sigmay() * qubit)
         else:
-            print("Le qubit s'est perdu dans le canal :(")
+            cible.receive_qubit(qubit)

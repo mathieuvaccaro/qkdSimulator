@@ -1,39 +1,32 @@
 import receiver
 import sender
+from random import randint as rng
 
 from utils.colors import bcolors
 
-# Redirection if self is sender or receiver
 def sifting(self, other_bases):
-    if(isinstance(self, receiver.Receiver)):
-        return sifting_receiver(self, other_bases)
-    else:
-        return sifting_sender(self, other_bases)
-
-
-def sifting_receiver(self : receiver.Receiver, other_bases):
     key = []
-    if(len(other_bases) != len(self.receiver_basis)):
+    if(len(other_bases) != len(self.chosen_bases)):
         print(bcolors.WARNING + "Basis aren't same length ! communication aborting")
         return False
     
     for i in range(len(other_bases)):
         # Same basis used
-        if(other_bases[i] == self.receiver_basis[i]):
-            key.append(self.receiver_bits[i])
+        if(other_bases[i] == self.chosen_bases[i]):
+            # Variable name change between sender and receiver
+            if(isinstance(self, receiver.Receiver)):
+                key.append(self.measured_bits[i])
+            else:
+                key.append(self.sent_bits[i])
 
     return key
 
-def sifting_sender(self : sender.Sender, other_bases):
+
+# We'll look bits which measured with same basis thann Alice AND Bob. If eve choose another basis than ALice and bob, bit will be selected randomly (car on a choisi une mauvaise base)
+def eve_sifting(eve, alice_bases, bob_bases):
     key = []
-
-    if(len(other_bases) != len(self.sending_basis)):
-        print(bcolors.WARNING + "Basis aren't same length ! communication aborting")
-        return False
-    
-    for i in range(len(other_bases)):
-        # Same basis used
-        if(other_bases[i] == self.sending_basis[i]):
-            key.append(self.sending_bits[i])
-
+    print(f"Alice base : {len(alice_bases)}, Bob base : {len(bob_bases)} et Eve base : {len(eve.chosen_bases)}")
+    for i in range(len(eve.chosen_bases)):
+        if(alice_bases[i] == bob_bases[i]):
+            key.append(eve.measured_bits[i])
     return key

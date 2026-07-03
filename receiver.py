@@ -9,124 +9,91 @@ import settings
 import numpy as np
 import threading
 import quantum_canal
+import protocols.protocol_manager as pm
 
 
 class Receiver:
-    # Rect states
-    H = qutip.basis(2, 0)  # Horizontal
-    V = qutip.basis(2, 1)  # Vertical
-    # Diag states (45 et -45°)
-    D = ((H + V) / np.sqrt(2)).unit()
-    DM = ((H - V) / np.sqrt(2)).unit()
-    STATES = {
-        (0, 0): H,    # bit 0, rectiligne
-        (1, 0): V,    # bit 1, rectiligne
-        (0, 1): D,    # bit 0, diagonale
-        (1, 1): DM,   # bit 1, diagonale
-    }
 
     def __init__(self, apd0: apd.Apd, apd1: apd.Apd, quantum_channel, clk: clock.Clock):
         self.apd0 = apd0
         self.apd1 = apd1
         self.quantum_channel = quantum_channel
         self.clk = clk
-        self.clk.subscribe(self.lost_qubits_detector)
+        self.clk.subscribe(self.detect_lost_qubit)
 
-        # État propre à chaque instance (plus au niveau de la classe)
-        self.communication_en_cours = False
+        # One basis and one bit per tick, kept aligned index by index
+        self.chosen_bases = []
+        self.measured_bits = []
 
-        # Une base et un bit par tick, gardés alignés index par index
-        self.receiver_basis = []
-        self.receiver_bits = []
-
-        self.qubits_received = False
-        self.message_size = settings.message_size  # Nombre de bits par QKD
-        self.bit_number = -1  # index de bit, -1 car le sender démarre à 0
+        self.qubit_received = False
+        self.message_size = settings.message_size  # Number of bits per QKD run
+        self.received_qubit_count = -1  # bit index, -1 because the sender starts at 0
         self.communication_finished = threading.Event()
 
-        # Protège les attributs partagés entre le thread d'horloge,
-        # le détecteur de perte et le callback de l'APD
+        # Guards the attributes shared between the clock thread,
+        # the lost-qubit detector and the APD callback
         self._lock = threading.Lock()
 
-    # Si on démarre une nouvelle communication, on réinitialise tout
-    def start_new_communication(self, clk: clock.Clock):
-        with self._lock:
-            self.receiver_basis = []
-            self.receiver_bits = []
-            self.qubits_received = False
-            self.bit_number = -1
-            self.communication_en_cours = False
-            self.communication_finished.clear()
-        # NB : on ne se ré-abonne PAS ici si on l'a déjà fait dans __init__,
-        # sinon lost_qubits_detector serait appelé plusieurs fois par tick.
-        # Ne garder l'abonnement qu'à un seul endroit.
-        self.clk = clk
+        # Get state by protocol
+        self.STATES = pm.get_states()
 
-    # Appelée à chaque tick. On attend tolerance_message_not_receive ms ;
-    # si "qubits_received" est toujours False, le qubit a été perdu.
-    # On ajoute alors un marqueur -1 aux DEUX listes pour rester aligné.
-    def lost_qubits_detector(self):
+    # Called on every tick. We wait tolerance_message_not_receive ms;
+    # if "qubit_received" is still False, the qubit was lost.
+    # We then append a -1 marker to BOTH lists to stay aligned.
+    def detect_lost_qubit(self):
         time.sleep(settings.tolerance_message_not_receive / 1000)
         with self._lock:
-            if self.qubits_received == False:
-                self.receiver_bits.append(-1)
-                self.receiver_basis.append(-1)  # garde l'alignement base <-> bit
-                print(bcolors.WARNING + "BIT PERDU :)" + bcolors.ENDC)
-                self.bit_number += 1
-                if self.bit_number == self.message_size:
+            if self.qubit_received == False:
+                self.measured_bits.append(-1)
+                self.chosen_bases.append(-1)  # keep basis <-> bit alignment
+                self.received_qubit_count += 1
+                if self.received_qubit_count == self.message_size:
                     self.close_communication()
-            self.qubits_received = False
+            self.qubit_received = False
 
-    # Appelée juste après chaque tick. Une base est tirée au hasard et le
-    # photon est mesuré dans cette base. Base ET bit sont enregistrés ensemble.
-    def receive_qubits(self, sended_state):
+    # Called right after each tick. A basis is drawn at random and the
+    # photon is measured in that basis. Basis AND bit are recorded together.
+    def receive_qubit(self, sent_state):
+
+
         with self._lock:
-            if self.bit_number == 0:
+            if self.received_qubit_count == 0:
                 print(bcolors.OKBLUE + "[RECEIVER] - START OF COMMUNICATION" + bcolors.ENDC)
-                self.communication_en_cours = True
 
-            basis = rng(0, 1)
-            receiver_basis_x = self.STATES[(0, basis)]
-            receiver_basis_y = self.STATES[(1, basis)]
+            chosen_basis = rng(0, 1)
+            basis_state_0 = self.STATES[(0, chosen_basis)]
+            basis_state_1 = self.STATES[(1, chosen_basis)]
 
-            # Mesure du qubit dans la base choisie
-            measure = qutip.measurement.measure(
-                sended_state,
-                [qutip.ket2dm(receiver_basis_x), qutip.ket2dm(receiver_basis_y)]
-            )[0]
+            # Measure the qubit in the chosen basis
+            measured_bit = qutip.measurement.measure(sent_state,[qutip.ket2dm(basis_state_0), qutip.ket2dm(basis_state_1)])[0]
 
-            # On enregistre base + bit de façon atomique, dans le même bloc.
-            # L'appel aux APD reste pour la fidélité de la simulation, mais
-            # le bit qui alimente la clé provient directement de la mesure,
-            # ce qui supprime la course avec le callback asynchrone add_bits.
-            self.receiver_basis.append(basis)
-            self.receiver_bits.append(measure)
-            self.read_bits(measure)
+            # We record basis + bit atomically, in the same block.
+            # The APD call is kept for simulation fidelity, but the bit
+            # feeding the key comes straight from the measurement,
+            # which removes the race with the asynchronous add_bits callback.
+            self.chosen_bases.append(chosen_basis)
+            self.measured_bits.append(measured_bit)
+            self.trigger_apd(measured_bit)
 
-            self.qubits_received = True
-            self.bit_number += 1
+            self.qubit_received = True
+            self.received_qubit_count += 1
 
-            if self.bit_number == self.message_size:
+            if self.received_qubit_count == self.message_size:
                 self.close_communication()
 
     def close_communication(self):
         print(bcolors.OKBLUE + "[RECEIVER] - END OF COMMUNICATION" + bcolors.ENDC)
-        self.communication_en_cours = False
-        self.communication_finished.set()  # débloque ceux qui attendent
+        #self.communication_in_progress = False
+        self.communication_finished.set()  # unblock anyone waiting
         self.clk.stop()
 
-    # Déclenche l'APD correspondante (side effect de simulation).
-    def read_bits(self, measure):
-        if measure == 0:
+    # Fires the matching APD (simulation side effect).
+    def trigger_apd(self, measured_bit):
+        if measured_bit == 0:
             self.apd0.receive_photon()
-        elif measure == 1:
+        elif measured_bit == 1:
             self.apd1.receive_photon()
 
-    # Conservée pour compatibilité si l'APD veut notifier le receiver.
-    # NE PLUS appender ici : le bit est déjà enregistré dans receive_qubits,
-    # sinon on aurait un doublon et un nouveau décalage.
-    def add_bits(self, bit):
+    def read_value(self, value):
+        # print(bcolors.OKGREEN +f"Photon correctly detected ({value})!" + bcolors.ENDC)
         pass
-
-    def get_last_sifting_info(self):
-        return (self.receiver_basis, self.receiver_bits)

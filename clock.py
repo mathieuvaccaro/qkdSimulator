@@ -23,7 +23,7 @@ class Clock:
 
     # --- API publique de lecture du temps (en ms) ---
     def elapsed(self) -> float:
-        """Temps réel écoulé (ms) depuis start(). 0.0 si pas démarrée."""
+        #Temps réel écoulé (ms) depuis start(). 0.0 si pas démarrée.
         if self._start_time is None:
             return 0.0
         return (time.monotonic() - self._start_time) * 1000.0

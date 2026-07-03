@@ -200,6 +200,5 @@ while(True):
     bob_sifted_bits = Sifting(alice_bases, bob_bases, bob_bits)
     qber_score = QBER(alice_sifted_bits, bob_sifted_bits)
     Conclusion(qber_score)
-    print(n)
     n+=1
 

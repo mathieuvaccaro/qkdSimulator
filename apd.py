@@ -64,9 +64,9 @@ class Apd:
         # If dead_time_elapsed >= dead_time -> ready to detect.
         # If dead_time_elapsed <  dead_time -> currently in dead time.
         self.dead_time_elapsed = self.dead_time
-
-    def set_receiver(self, receiver):
-        self.receiver = receiver
+        
+    def set_parent(self, parent):
+        self.parent = parent
 
     # Create the clock, subscribe the per-tick callbacks and start it
     def start_clock(self):
@@ -125,7 +125,6 @@ class Apd:
         while self.is_running:
             self.photon_event.wait()   # wait for a photon
             self.photon_event.clear()  # lower the signal flag
-            print(bcolors.OKBLUE + f"Photon received... ({self.linked_bit})!" + bcolors.ENDC)
 
             if not self.gate_open:
                 print(bcolors.WARNING +
@@ -136,11 +135,12 @@ class Apd:
             elif self.dead_time_elapsed < self.dead_time:
                 print(bcolors.WARNING +
                       f"APD is in a dead time, photon was discarded ({self.linked_bit})!" + bcolors.ENDC)
+            
+            
+            # Good detection !
             else:
-                print(bcolors.OKGREEN +
-                      f"Photon correctly detected ({self.linked_bit})!" + bcolors.ENDC)
-                self.receiver.add_bits(self.linked_bit)
                 self.dead_time_elapsed = 0  # start the dead time
+                self.parent.read_value(self.linked_bit)
 
     # Start the simulation: launches the (single) internal clock.
     def run(self):
