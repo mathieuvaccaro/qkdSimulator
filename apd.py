@@ -1,7 +1,5 @@
 import threading
-import time
 import clock  # We use clock.py
-import receiver
 from utils.colors import bcolors
 
 # Class APD represents an avalanche photodiode in Gated Mode.
@@ -11,7 +9,7 @@ from utils.colors import bcolors
 # We approximate the quantum circuit with an electronic circuit.
 
 
-def approx_equal(x, y, tolerance=0.001):
+def approx_equal(x : int, y : int, tolerance=0.001) -> bool:
     if x + y == 0:
         return abs(x - y) <= tolerance
     return abs(x - y) <= 0.5 * tolerance * abs(x + y)

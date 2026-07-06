@@ -4,7 +4,7 @@ from random import randint as rng
 
 from utils.colors import bcolors
 
-def sifting(self, other_bases):
+def sifting(self, other_bases : list[int]):
     key = []
     if(len(other_bases) != len(self.chosen_bases)):
         print(bcolors.WARNING + "Basis aren't same length ! communication aborting")
@@ -23,9 +23,8 @@ def sifting(self, other_bases):
 
 
 # We'll look bits which measured with same basis thann Alice AND Bob. If eve choose another basis than ALice and bob, bit will be selected randomly (car on a choisi une mauvaise base)
-def eve_sifting(eve, alice_bases, bob_bases):
+def eve_sifting(eve, alice_bases : list[int], bob_bases : list[int]):
     key = []
-    print(f"Alice base : {len(alice_bases)}, Bob base : {len(bob_bases)} et Eve base : {len(eve.chosen_bases)}")
     for i in range(len(eve.chosen_bases)):
         if(alice_bases[i] == bob_bases[i]):
             key.append(eve.measured_bits[i])

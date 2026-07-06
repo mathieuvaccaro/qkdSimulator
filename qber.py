@@ -1,10 +1,9 @@
-import utils
 import settings
 from random import sample as rng_s
 
 
 # For now, we simplify qber section (by centralization)
-def qber_calculus(bits_alice, bits_bob):
+def qber_calculus(bits_alice : list[int], bits_bob : list[int]) -> float:
     nb_qber = int(settings.qber_percent / 100 * len(bits_alice))
     if nb_qber == 0:  # pas assez de bits pour estimer le QBER
         return (0.0, remove_revealed_bits(bits_alice, []))
@@ -18,7 +17,7 @@ def qber_calculus(bits_alice, bits_bob):
     return (qber_score / nb_qber * 100, remove_revealed_bits(bits_alice, random_indexes))
 
 
-def remove_revealed_bits(key: list, indexes) -> list:
+def remove_revealed_bits(key: list[int], indexes : int) -> list:
     return key # Pour l'insant on retourne la key tel quel, mais l'échange est public donc eve peut savoir quelle index retirer
     to_remove = set(indexes)
     return [bit for i, bit in enumerate(key) if i not in to_remove]

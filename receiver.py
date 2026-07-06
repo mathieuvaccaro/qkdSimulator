@@ -53,7 +53,7 @@ class Receiver:
 
     # Called right after each tick. A basis is drawn at random and the
     # photon is measured in that basis. Basis AND bit are recorded together.
-    def receive_qubit(self, sent_state):
+    def receive_qubit(self, sent_state : qutip.qobj):
 
 
         with self._lock:
@@ -88,12 +88,12 @@ class Receiver:
         self.clk.stop()
 
     # Fires the matching APD (simulation side effect).
-    def trigger_apd(self, measured_bit):
+    def trigger_apd(self, measured_bit : int):
         if measured_bit == 0:
             self.apd0.receive_photon()
         elif measured_bit == 1:
             self.apd1.receive_photon()
 
-    def read_value(self, value):
+    def read_value(self, value : int):
         # print(bcolors.OKGREEN +f"Photon correctly detected ({value})!" + bcolors.ENDC)
         pass

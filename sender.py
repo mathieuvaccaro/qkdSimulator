@@ -17,7 +17,7 @@ class Sender:
     communication_in_progress = False
     message_size = settings.message_size
 
-    def __init__(self, quantum_channel, clk: clock.Clock):
+    def __init__(self, quantum_channel : quantum_canal.QuantumCanal, clk: clock.Clock):
         self.quantum_channel = quantum_channel
         self.sent_qubit_count = 0
         self.chosen_bases = []
@@ -49,5 +49,5 @@ class Sender:
             self.communication_in_progress = False
             self.communication_finished.set()   # unblock anyone waiting
 
-    def send_qubit(self, qubit):
+    def send_qubit(self, qubit : qutip.qobj):
         self.quantum_channel.send_qubit(qubit)

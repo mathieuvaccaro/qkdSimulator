@@ -1,10 +1,11 @@
 import qutip
 from random import randint as rng
-import apd
+from apd import Apd
 from utils.colors import bcolors
 import clock
 import time
 import settings
+import qutip
 import numpy as np
 import threading
 import quantum_canal
@@ -19,7 +20,7 @@ class Intercept:
 #█   █ █     █   █ █   █ █   █ █            █ █     █       █    █  █   █ █  ██ 
 # ███  █████  ███  ████  █   █ █████    ████  █████  ███    █   ███  ███  █   █ 
 
-    def __init__(self, apd0: apd.Apd, apd1: apd.Apd, quantum_channel, clk: clock.Clock):
+    def __init__(self, apd0: Apd, apd1: Apd, quantum_channel, clk: clock.Clock):
         # GLOBAL
         self.quantum_channel = quantum_channel
         self.chosen_bases = []
@@ -65,7 +66,7 @@ class Intercept:
 
     # Called right after each tick. A basis is drawn at random and the
     # photon is measured in that basis. Basis AND bit are recorded together.
-    def receive_qubit(self, sent_state):
+    def receive_qubit(self, sent_state : qutip.Qobj):
         with self._lock:
             chosen_basis = rng(0, 1)
             basis_state_0 = self.STATES[(0, chosen_basis)]
@@ -82,7 +83,6 @@ class Intercept:
             # Intercept-resend : on réémet vers Bob l'état qui correspond
             # exactement à ce qu'Eve a mesuré (bit mesuré, base de mesure).
             resent_qubit = self.STATES[(measured_bit, chosen_basis)]
-            #self.send_qubit(resent_qubit)
 
             self.qubit_received = True
             self.received_qubit_count += 1
@@ -95,7 +95,7 @@ class Intercept:
         self.clk.stop()
 
     # Fires the matching APD (simulation side effect).
-    def trigger_apd(self, measured_bit):
+    def trigger_apd(self, measured_bit : int):
         if measured_bit == 0:
             self.apd0.receive_photon()
         elif measured_bit == 1:
@@ -127,5 +127,5 @@ class Intercept:
             self.communication_in_progress = False
             self.communication_finished.set()   # unblock anyone waiting
 
-    def send_qubit(self, qubit):
+    def send_qubit(self, qubit : qutip.Qobj):
         self.quantum_channel.send_qubit(qubit, True) # True bc is for qubits was sended to bob
