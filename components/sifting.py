@@ -1,5 +1,5 @@
-import receiver
-import sender
+import components.receiver as receiver
+import components.sender as sender
 from random import randint as rng
 
 from utils.colors import bcolors

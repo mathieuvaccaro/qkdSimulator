@@ -1,14 +1,14 @@
 import qutip
 from random import randint as rng
 from random import sample as rng_s
-import apd
+import components.apd as apd
 from utils.colors import bcolors
-import clock
+import components.clock as clock
 import time
 import settings
 import numpy as np
 import threading
-import quantum_canal
+import components.quantum_canal as quantum_canal
 import protocols.protocol_manager as pm
 
 
@@ -51,39 +51,41 @@ class Receiver:
                     self.close_communication()
             self.qubit_received = False
 
+    # Called when receiver get more than one photon for a detection
+    def already_receive_photon(self):
+        print(bcolors.WARNING + "Un photon a déjà était reçu, on le jete" + bcolors.ENDC)
+        pass
+
     # Called right after each tick. A basis is drawn at random and the
     # photon is measured in that basis. Basis AND bit are recorded together.
     def receive_qubit(self, sent_state : qutip.qobj):
+        with self._lock:            
+            if(self.qubit_received == True):
+                self.already_receive_photon()
+            else:
+                
+                chosen_basis = rng(0, 1)
+                basis_state_0 = self.STATES[(0, chosen_basis)]
+                basis_state_1 = self.STATES[(1, chosen_basis)]
 
+                # Measure the qubit in the chosen basis
+                measured_bit = qutip.measurement.measure(sent_state,[qutip.ket2dm(basis_state_0), qutip.ket2dm(basis_state_1)])[0]
 
-        with self._lock:
-            if self.received_qubit_count == 0:
-                print(bcolors.OKBLUE + "[RECEIVER] - START OF COMMUNICATION" + bcolors.ENDC)
+                # We record basis + bit atomically, in the same block.
+                # The APD call is kept for simulation fidelity, but the bit
+                # feeding the key comes straight from the measurement,
+                # which removes the race with the asynchronous add_bits callback.
+                self.chosen_bases.append(chosen_basis)
+                self.measured_bits.append(measured_bit)
+                self.trigger_apd(measured_bit)
 
-            chosen_basis = rng(0, 1)
-            basis_state_0 = self.STATES[(0, chosen_basis)]
-            basis_state_1 = self.STATES[(1, chosen_basis)]
+                self.qubit_received = True
+                self.received_qubit_count += 1
 
-            # Measure the qubit in the chosen basis
-            measured_bit = qutip.measurement.measure(sent_state,[qutip.ket2dm(basis_state_0), qutip.ket2dm(basis_state_1)])[0]
-
-            # We record basis + bit atomically, in the same block.
-            # The APD call is kept for simulation fidelity, but the bit
-            # feeding the key comes straight from the measurement,
-            # which removes the race with the asynchronous add_bits callback.
-            self.chosen_bases.append(chosen_basis)
-            self.measured_bits.append(measured_bit)
-            self.trigger_apd(measured_bit)
-
-            self.qubit_received = True
-            self.received_qubit_count += 1
-
-            if self.received_qubit_count == self.message_size:
-                self.close_communication()
+                if self.received_qubit_count == self.message_size:
+                    self.close_communication()
 
     def close_communication(self):
-        print(bcolors.OKBLUE + "[RECEIVER] - END OF COMMUNICATION" + bcolors.ENDC)
-        #self.communication_in_progress = False
         self.communication_finished.set()  # unblock anyone waiting
         self.clk.stop()
 

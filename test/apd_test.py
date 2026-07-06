@@ -4,7 +4,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) # To import apd module :(
 
-from apd import Apd
+from components.apd import Apd
 
 
 # This test is with perfect APDs

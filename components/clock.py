@@ -57,7 +57,6 @@ class Clock:
         self._thread.start()
 
     def stop(self, timeout: float | None = None):
-
         # Nothing to do if clock is not running
         if self._thread is None or not self._thread.is_alive():
             self._stop_event.set()

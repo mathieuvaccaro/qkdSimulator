@@ -1,15 +1,15 @@
-import clock
-import sender
-from quantum_canal import QuantumCanal # idk why i have to import only class and not file -_-
-import receiver
-import apd
+import components.clock as clock
+import components.sender as sender
+from components.quantum_canal import QuantumCanal # idk why i have to import only class and not file -_-
+import components.receiver as receiver
+import components.apd as apd
 import settings
 import threading
-import sifting
+import components.sifting as sifting
 from utils.colors import bcolors
-import qber
+import components.qber as qber
 from utils.percent_corrupted_key import how_much_key_corrupted
-import intercept
+from attacks.attack_manager import get_active_attack
 
 def init_communication():
     print("Initialisation en cours...")
@@ -36,10 +36,16 @@ def init_communication():
     apd1.set_parent(Bob)
 
 
-    if(settings.eve_present):
+    # An attack is active only if one of its flags is set in settings.py.
+    # The registry (attacks/attack_manager.py) tells us which Intercept subclass
+    # to instantiate; Eve is present on the channel only when an attack is active.
+    AttackClass = get_active_attack()
+    eve_active = AttackClass is not None
+
+    if(eve_active):
         apdEve0 = apd.Apd(0, clock_period=settings.message_interval, gate_off_duration=0, gate_on_duration=1000, dead_time=0) # For now we create perfect apd
         apdEve1 = apd.Apd(1, clock_period=settings.message_interval, gate_off_duration=0, gate_on_duration=1000, dead_time=0)
-        Eve = intercept.Intercept(apdEve0, apdEve1, quantum_canal, commune_clk)
+        Eve = AttackClass(apdEve0, apdEve1, quantum_canal, commune_clk)
 
         quantum_canal.setInterceptor(Eve)
         apdEve0.set_parent(Eve)
@@ -71,7 +77,7 @@ def init_communication():
     commune_clk.start()
 
     # Wait the end of communciation
-    # We don't have to put eve, because if she's present, if alice and bob finished, eve indirectly finished
+    # We don't have to wait eve, because if alice and bob have finished, eve finished too
     Alice.communication_finished.wait()   # bloque jusqu'à la fin de la comm
     Bob.communication_finished.wait()
 
@@ -80,7 +86,7 @@ def init_communication():
     keyBob = sifting.sifting(Bob, Alice.chosen_bases)
 
     if(keyAlice != keyBob):
-        print(bcolors.FAIL + f"[ERROR] Alice and bob haven't same keys ! ({how_much_key_corrupted(keyAlice, keyBob)} " + bcolors.ENDC)
+        print(bcolors.FAIL + f"[ERROR] Alice and bob haven't same keys ! ({how_much_key_corrupted(keyAlice, keyBob)}%)" + bcolors.ENDC)
     else:
         print(bcolors.OKGREEN + "[GOOD] Alice and bob have same keys !"+ bcolors.ENDC)
 
@@ -92,7 +98,7 @@ def init_communication():
         print(bcolors.FAIL + f"Qber is very high : {qber_value}. Communication aborting ..."+ bcolors.ENDC)
    
 
-    if(settings.eve_present):
+    if(eve_active):
         keyEve = sifting.eve_sifting(Eve, Alice.chosen_bases, Bob.chosen_bases)
         print(f"Eve got {how_much_key_corrupted(final_key, keyEve)} % of Alice key")
         

@@ -1,5 +1,5 @@
 import threading
-import clock  # We use clock.py
+import components.clock as clock  # We use clock.py
 from utils.colors import bcolors
 
 # Class APD represents an avalanche photodiode in Gated Mode.
