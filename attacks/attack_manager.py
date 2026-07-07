@@ -1,21 +1,11 @@
-from attacks import PNS
 import settings
 from attacks.intercept_and_resent import InterceptAndResent
+from attacks.PNS import Pns
 
-
-# Registre des attaques disponibles.
-#
-# Chaque attaque est une sous-classe de Intercept, associée au flag de settings.py
-# qui l'active. L'ordre définit la priorité si plusieurs flags étaient à True.
-#
-# Pour ajouter une attaque :
-#   1. créer une sous-classe de Intercept dans attacks/ (surcharger receive_qubit
-#      / emit_qubit),
-#   2. ajouter son flag dans settings.py,
-#   3. l'enregistrer ci-dessous.
+# Liste des attaques disponible avec les classes héritant
 ATTACK_REGISTRY = [
     ("intercept_and_resent", InterceptAndResent),
-    ("pns", PNS),
+    ("PNS", Pns),
 ]
 
 

@@ -7,9 +7,6 @@ import qutip
 #    █ █     █  ██ █   █  █  █  ██ █   █        █ █     █       █    █  █   █ █  ██
 #████  █████ █   █ ████  ███ █   █  ███     ████  █████  ███    █   ███  ███  █   █
 
-# Sending side of the interceptor: it re-emits qubits towards the receiver.
-# Attributes used here (STATES, counters, quantum_channel...) are created by the
-# factory (see intercept.factory).
 class SendingMixin:
 
     def emit_qubit(self, bit : int):

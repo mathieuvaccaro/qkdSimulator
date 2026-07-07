@@ -53,7 +53,7 @@ class Receiver:
 
     # Called when receiver get more than one photon for a detection
     def already_receive_photon(self):
-        print(bcolors.WARNING + "Un photon a déjà était reçu, on le jete" + bcolors.ENDC)
+        #print(bcolors.WARNING + "Un photon a déjà était reçu, on le jete" + bcolors.ENDC)
         pass
 
     # Called right after each tick. A basis is drawn at random and the

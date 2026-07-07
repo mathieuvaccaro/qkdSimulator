@@ -14,11 +14,15 @@ from intercept.factory import Intercept
 # à l'attaque : receive_qubit (mesure/réémission) et emit_qubit.
 class InterceptAndResent(Intercept):
 
+    def __init__(self, apdEve0, apdEve1, quantum_canal, commune_clk):
+        print(bcolors.OKCYAN + "[CLASSIC ATTACK INTERCEPT AND RESENT] ..." + bcolors.ENDC)
+        super().__init__(apdEve0, apdEve1, quantum_canal, commune_clk)
+
+
     # Appelée juste après chaque tick. Une base est tirée au hasard et le photon
     # est mesuré dans cette base. Base ET bit sont enregistrés ensemble.
     def receive_qubit(self, sent_state : qutip.Qobj):
         with self._lock:
-            print(bcolors.OKGREEN + "HEHE" + bcolors.ENDC)
             if(self.qubit_received == True):
                 self.already_receive_photon()
             else:

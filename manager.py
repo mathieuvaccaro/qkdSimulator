@@ -85,8 +85,10 @@ def init_communication():
     keyAlice = sifting.sifting(Alice, Bob.chosen_bases) # For now, we don't simulate alice and bob basis communication (because is on public channel)
     keyBob = sifting.sifting(Bob, Alice.chosen_bases)
 
-    if(keyAlice != keyBob):
-        print(bcolors.FAIL + f"[ERROR] Alice and bob haven't same keys ! ({how_much_key_corrupted(keyAlice, keyBob)}%)" + bcolors.ENDC)
+    if(len(keyAlice) != len(keyBob)):
+        print(bcolors.FAIL + f"[ERROR] Alice and bob haven't same keys size !" + bcolors.ENDC)
+    elif(keyAlice != keyBob):
+        print(bcolors.WARNING + f"[WARN] Alice and bob haven't same keys ! ({how_much_key_corrupted(keyAlice, keyBob)}%)" + bcolors.ENDC)
     else:
         print(bcolors.OKGREEN + "[GOOD] Alice and bob have same keys !"+ bcolors.ENDC)
 
@@ -100,6 +102,8 @@ def init_communication():
 
     if(eve_active):
         keyEve = sifting.eve_sifting(Eve, Alice.chosen_bases, Bob.chosen_bases)
+        if(len(keyEve) != len(keyAlice)):
+            print(bcolors.WARNING + f"Alice and Eve size's key aren't same :" + bcolors.ENDC)
         print(f"Eve got {how_much_key_corrupted(final_key, keyEve)} % of Alice key")
         
 

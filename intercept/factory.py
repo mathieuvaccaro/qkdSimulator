@@ -15,13 +15,9 @@ from intercept.sending import SendingMixin
 #█   █ █     █   █ █   █ █   █ █            █ █     █       █    █  █   █ █  ██
 # ███  █████  ███  ████  █   █ █████    ████  █████  ███    █   ███  ███  █   █
 
-# Factory / construction of the interceptor ("Eve").
-# It only wires the shared state up; the actual behaviour lives in the two
-# mixins:
-#   - ReceptionMixin : reading (measuring) qubits from the sender
-#   - SendingMixin   : re-emitting qubits towards the receiver
-# An attack is a dedicated file that subclasses Intercept and overrides
-# receive_qubit / emit_qubit.
+# C'est déjà assez compliqué, pour le coup je vais commenter en francais
+# L'interception fonctionne par un objet avec héritage, ici c'est le factory (la création de l'objet)
+# Pour cela on a une partie sending et une partie récéption
 class Intercept(ReceptionMixin, SendingMixin):
 
     message_size = settings.message_size
