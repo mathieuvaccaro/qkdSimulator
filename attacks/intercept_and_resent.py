@@ -13,7 +13,6 @@ class InterceptAndResent(Intercept):
     # Appelée juste après chaque tick. Une base est tirée au hasard et le photon
     # est mesuré dans cette base. Base ET bit sont enregistrés ensemble.
     def receive_qubit(self, sent_state : qutip.Qobj):
-        self.received_qubit_count = 0
         with self._lock:
             if(self.qubit_received == True):
                 self.already_receive_photon()
@@ -35,16 +34,9 @@ class InterceptAndResent(Intercept):
                 resent_qubit = self.STATES[(measured_bit, chosen_basis)]
 
                 self.qubit_received = True
-                self.received_qubit_count += 1
 
     def emit_qubit(self, bit : int):
-        if self.sent_qubit_count == 0:
-            self.communication_in_progress = True
         qubit = self.STATES[(bit, self.chosen_bases[len(self.chosen_bases)-1])]
 
         self.send_qubit(qubit)
         self.sent_qubit_count += 1
-
-        if self.sent_qubit_count == self.message_size:
-            self.communication_in_progress = False
-            self.communication_finished.set()   # unblock anyone waiting

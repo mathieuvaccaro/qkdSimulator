@@ -1,6 +1,5 @@
 def how_much_key_corrupted(keyA, keyB):
     if(len(keyA) != len(keyB)):
-        print(f"{len(keyA)} vs {len(keyB)}")
         return 0
     else:
         value = 0

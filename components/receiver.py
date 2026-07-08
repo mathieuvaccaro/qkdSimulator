@@ -46,6 +46,7 @@ class Receiver:
             with self._lock:
                 if self.qubit_received == False:
                     self.measured_bits.append(-1)
+                    self.chosen_bases[-1] = -1
                     self.received_qubit_count += 1
                     if self.received_qubit_count == self.message_size:
                         self.close_communication()
@@ -79,10 +80,8 @@ class Receiver:
                     self.trigger_apd(measured_bit)
 
                     self.qubit_received = True
-                    print(f"Reception : {self.received_qubit_count}")
                     self.received_qubit_count += 1
                     
-            print(f"{self.received_qubit_count} vs {self.message_size}")
             if self.received_qubit_count == self.message_size:
                 self.close_communication()
                 self.communication_finished.set()   # unblock anyone waiting

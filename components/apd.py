@@ -122,14 +122,11 @@ class Apd:
             self.photon_event.clear()  # lower the signal flag
 
             if not self.gate_open:
-                print(bcolors.WARNING +
-                      f"Gate is closed, photon was discarded ({self.linked_bit})!" + bcolors.ENDC)
+                print(bcolors.WARNING + f"Gate is closed, photon was discarded ({self.linked_bit})!" + bcolors.ENDC)
             elif self.mode == "linear":
-                print(bcolors.WARNING +
-                      f"APD isn't in geiger mode, photon was discarded ({self.linked_bit})!" + bcolors.ENDC)
+                print(bcolors.WARNING + f"APD isn't in geiger mode, photon was discarded ({self.linked_bit})!" + bcolors.ENDC)
             elif self.dead_time_elapsed < self.dead_time:
-                print(bcolors.WARNING +
-                      f"APD is in a dead time, photon was discarded ({self.linked_bit})!" + bcolors.ENDC)
+                print(bcolors.WARNING + f"APD is in a dead time, photon was discarded ({self.linked_bit})!" + bcolors.ENDC)
             
             
             # Good detection !

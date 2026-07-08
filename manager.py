@@ -34,25 +34,11 @@ def init_communication():
     # Assign Bob to apd (j'pense il y a une bien meilleur faonc de faire)
     apd0.set_parent(Bob)
     apd1.set_parent(Bob)
-
-    # --- Câblage de l'horloge partagée ---
-    # L'horloge exécute les callbacks À CHAQUE TICK dans l'ordre de souscription.
-    # Cet ordre est CAUSAL et doit être respecté :
-    #   1. Bob.prepare_bases   -> Bob choisit sa base de mesure (AVANT la réception)
-    #   2. Alice.emit_qubit    -> Alice émet ; le canal appelle directement
-    #                             Bob.receive_qubit qui mesure avec la base de l'étape 1
-    #   3. Bob.detect_lost_qubit -> marque le qubit perdu si rien n'est arrivé
-    # Avant, les souscriptions étaient faites dans les constructeurs (Alice créée
-    # avant Bob) : emit_qubit passait AVANT prepare_bases, donc Bob mesurait avec
-    # la base du tick précédent -> décalage d'une base entre Alice et Bob.
     commune_clk.subscribe(Bob.prepare_bases)
     commune_clk.subscribe(Alice.emit_qubit)
     commune_clk.subscribe(Bob.detect_lost_qubit)
 
-
-    # An attack is active only if one of its flags is set in settings.py.
-    # The registry (attacks/attack_manager.py) tells us which Intercept subclass
-    # to instantiate; Eve is present on the channel only when an attack is active.
+    # Select
     AttackClass = get_active_attack()
     eve_active = AttackClass is not None
 
@@ -93,14 +79,11 @@ def init_communication():
     # Wait the end of communciation
     # We don't have to wait eve, because if alice and bob have finished, eve finished too
     Alice.communication_finished.wait()   # bloque jusqu'à la fin de la comm
-    print("Alice fini")
     Bob.communication_finished.wait()
-    print("Bob fini")
     keyAlice = sifting.sifting(Alice, Bob.chosen_bases) # For now, we don't simulate alice and bob basis communication (because is on public channel)
     keyBob = sifting.sifting(Bob, Alice.chosen_bases)
-    print(f"LA CLE : {keyAlice}")
     if(len(keyAlice) != len(keyBob)):
-        print(bcolors.FAIL + f"[ERROR] Alice and bob haven't same keys size !" + bcolors.ENDC)
+        print(bcolors.FAIL + f"[ERROR] Alice and bob haven't same keys size ! ({len(keyAlice)} vs {len(keyBob)})" + bcolors.ENDC)
     elif(keyAlice != keyBob):
         print(bcolors.WARNING + f"[WARN] Alice and bob haven't same keys ! ({how_much_key_corrupted(keyAlice, keyBob)}%)" + bcolors.ENDC)
     else:
@@ -118,7 +101,7 @@ def init_communication():
         keyEve = sifting.eve_sifting(Eve, Alice.chosen_bases, Bob.chosen_bases)
         if(len(keyEve) != len(keyAlice)):
             print(bcolors.WARNING + f"Alice and Eve size's key aren't same :" + bcolors.ENDC)
-        print(f"Eve got {how_much_key_corrupted(final_key, keyEve)} % of Alice key")
+        print(bcolors.FAIL + f"Eve got {how_much_key_corrupted(final_key, keyEve)} % of Alice key")
 
 
 init_communication()
