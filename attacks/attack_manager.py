@@ -1,11 +1,13 @@
 import settings
 from attacks.intercept_and_resent import InterceptAndResent
 from attacks.PNS import Pns
+from attacks.trojan_horse import TrojanHorse
 
 # Liste des attaques disponible avec les classes héritant
 ATTACK_REGISTRY = [
     ("intercept_and_resent", InterceptAndResent),
     ("PNS", Pns),
+    ("TrojanHorse", TrojanHorse),
 ]
 
 

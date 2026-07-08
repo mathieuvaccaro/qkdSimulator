@@ -22,11 +22,14 @@ class Sender:
         self.chosen_bases = []
         self.sent_bits = []
         self.clk = clk
-        self.clk.subscribe(self.emit_qubit)
         self.communication_finished = threading.Event()  # lets main know when it's finished
         self.STATES = pm.get_states()
 
     def emit_qubit(self):
+        # On s'arrête dès que tout le message a été émis (exactement message_size qubits).
+        if(self.sent_qubit_count >= self.message_size):
+            return
+
         bit = rng(0, 1)
         chosen_basis = rng(0, 1)
         self.sent_bits.append(bit)
@@ -35,19 +38,17 @@ class Sender:
 
         # How much photon will be sended
         if(settings.average_emitted_photon == -1):
-           number_photon_emitted = 1
+            number_photon_emitted = 1
         else:
-           number_photon_emitted = np.random.poisson(settings.average_emitted_photon)
-        
+            number_photon_emitted = np.random.poisson(settings.average_emitted_photon)
         # Emit n photons
         for _ in range(number_photon_emitted):
             self.send_qubit(qubit)
-        
-        self.sent_qubit_count += 1
 
+        self.sent_qubit_count += 1
         pb.progress_bar(self.sent_qubit_count, self.message_size)
 
-        if self.sent_qubit_count == self.message_size:
+        if(self.sent_qubit_count >= self.message_size):
             self.communication_finished.set()   # unblock anyone waiting
 
     def send_qubit(self, qubit : qutip.qobj):

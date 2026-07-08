@@ -75,9 +75,6 @@ class Apd:
         self.clk.subscribe(self.update_dead_time)
         self.clk.start()
 
-    def stop_clock(self):
-        self.clk.stop
-
     # Switch between linear and geiger mode depending on the bias voltage
     def update_mode(self):
         self.mode = "geiger" if self.voltage > self.breakdown_voltage else "linear"

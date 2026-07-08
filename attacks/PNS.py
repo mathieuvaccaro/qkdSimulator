@@ -12,7 +12,7 @@ from random import randint as rng
 
 class Pns(Intercept):
     
-    def __init__(self, apdEve0, apdEve1, quantum_canal, commune_clk):
+    def __init__(self, apdEve0, apdEve1, quantum_canal, commune_clk, Alice, Bob):
         print(bcolors.OKCYAN + "[ATTACK PNS] ..." + bcolors.ENDC)
         self.second_photon = 0 # We want to intercept only one photon, so we have to add a variable
         super().__init__(apdEve0, apdEve1, quantum_canal, commune_clk)

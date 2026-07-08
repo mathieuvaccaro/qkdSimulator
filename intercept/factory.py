@@ -22,7 +22,7 @@ class Intercept(ReceptionMixin, SendingMixin):
 
     message_size = settings.message_size
 
-    def __init__(self, apd0: Apd, apd1: Apd, quantum_channel, clk: clock.Clock):
+    def __init__(self, apd0: Apd, apd1: Apd, quantum_channel, clk: clock.Clock, Alice = None, Bob = None):
         # GLOBAL
         self.quantum_channel = quantum_channel
         self.chosen_bases = []
@@ -31,6 +31,7 @@ class Intercept(ReceptionMixin, SendingMixin):
         self.clk.subscribe(self.detect_lost_qubit)
         self.communication_finished = threading.Event()
         self.STATES = pm.get_states()
+        self.finished = False
 
         self.nb = 0
         # (only) READING
@@ -44,3 +45,4 @@ class Intercept(ReceptionMixin, SendingMixin):
         # (only) SENDING
         self.sent_qubit_count = 0
         self.communication_in_progress = False
+

@@ -19,15 +19,18 @@ class Receiver:
         self.apd1 = apd1
         self.quantum_channel = quantum_channel
         self.clk = clk
-        self.clk.subscribe(self.detect_lost_qubit)
-
+        # Les souscriptions à l'horloge sont faites explicitement par le manager,
+        # dans un ordre garanti : prepare_bases (choix de la base) AVANT emit_qubit
+        # (émission + réception), puis detect_lost_qubit.
+        self.finished = False
+        
         # One basis and one bit per tick, kept aligned index by index
         self.chosen_bases = []
         self.measured_bits = []
 
         self.qubit_received = False
         self.message_size = settings.message_size  # Number of bits per QKD run
-        self.received_qubit_count = -1  # bit index, -1 because the sender starts at 0
+        self.received_qubit_count = 0
         self.communication_finished = threading.Event()
 
         # Guards the attributes shared between the clock thread,
@@ -37,53 +40,53 @@ class Receiver:
         # Get state by protocol
         self.STATES = pm.get_states()
 
-    # Called on every tick. We wait tolerance_message_not_receive ms;
-    # if "qubit_received" is still False, the qubit was lost.
-    # We then append a -1 marker to BOTH lists to stay aligned.
     def detect_lost_qubit(self):
         time.sleep(settings.tolerance_message_not_receive / 1000)
-        with self._lock:
-            if self.qubit_received == False:
-                self.measured_bits.append(-1)
-                self.chosen_bases.append(-1)  # keep basis <-> bit alignment
-                self.received_qubit_count += 1
-                if self.received_qubit_count == self.message_size:
-                    self.close_communication()
-            self.qubit_received = False
+        if(self.finished == False):
+            with self._lock:
+                if self.qubit_received == False:
+                    self.measured_bits.append(-1)
+                    self.received_qubit_count += 1
+                    if self.received_qubit_count == self.message_size:
+                        self.close_communication()
+                        self.communication_finished.set()
+                self.qubit_received = False
 
     # Called when receiver get more than one photon for a detection
     def already_receive_photon(self):
         #print(bcolors.WARNING + "Un photon a déjà était reçu, on le jete" + bcolors.ENDC)
         pass
 
-    # Called right after each tick. A basis is drawn at random and the
-    # photon is measured in that basis. Basis AND bit are recorded together.
+    def prepare_bases(self):
+        if(self.received_qubit_count < self.message_size):
+            self.chosen_bases.append(rng(0, 1))
+
     def receive_qubit(self, sent_state : qutip.qobj):
-        with self._lock:            
-            if(self.qubit_received == True):
-                self.already_receive_photon()
-            else:
-                
-                chosen_basis = rng(0, 1)
-                basis_state_0 = self.STATES[(0, chosen_basis)]
-                basis_state_1 = self.STATES[(1, chosen_basis)]
+        with self._lock:
+            if(self.received_qubit_count < self.message_size):
+                if(self.qubit_received == True):
+                    self.already_receive_photon()
+                else:
+                    # Measure the qubit in the chosen basis
+                    if(len(self.chosen_bases) == 0):
+                        return
+                    
+                    basis_state_0 = self.STATES[(0, self.chosen_bases[-1])]
+                    basis_state_1 = self.STATES[(1, self.chosen_bases[-1])]
+                    measured_bit = qutip.measurement.measure(sent_state,[qutip.ket2dm(basis_state_0), qutip.ket2dm(basis_state_1)])[0]
 
-                # Measure the qubit in the chosen basis
-                measured_bit = qutip.measurement.measure(sent_state,[qutip.ket2dm(basis_state_0), qutip.ket2dm(basis_state_1)])[0]
+                    self.measured_bits.append(measured_bit)
+                    self.trigger_apd(measured_bit)
 
-                # We record basis + bit atomically, in the same block.
-                # The APD call is kept for simulation fidelity, but the bit
-                # feeding the key comes straight from the measurement,
-                # which removes the race with the asynchronous add_bits callback.
-                self.chosen_bases.append(chosen_basis)
-                self.measured_bits.append(measured_bit)
-                self.trigger_apd(measured_bit)
+                    self.qubit_received = True
+                    print(f"Reception : {self.received_qubit_count}")
+                    self.received_qubit_count += 1
+                    
+            print(f"{self.received_qubit_count} vs {self.message_size}")
+            if self.received_qubit_count == self.message_size:
+                self.close_communication()
+                self.communication_finished.set()   # unblock anyone waiting
 
-                self.qubit_received = True
-                self.received_qubit_count += 1
-
-                if self.received_qubit_count == self.message_size:
-                    self.close_communication()
 
     def close_communication(self):
         self.communication_finished.set()  # unblock anyone waiting
