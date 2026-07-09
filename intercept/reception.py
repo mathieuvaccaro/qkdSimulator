@@ -64,16 +64,8 @@ class ReceptionMixin:
                     if(len(self.chosen_bases) == 0):
                         return
                     
-                    basis_state_0 = self.STATES[(0, self.chosen_bases[-1])]
-                    basis_state_1 = self.STATES[(1, self.chosen_bases[-1])]
-                    measured_bit = qutip.measurement.measure(sent_state,[qutip.ket2dm(basis_state_0), qutip.ket2dm(basis_state_1)])[0]
-
-                    # We record basis + bit atomically, in the same block.
-                    # The APD call is kept for simulation fidelity, but the bit
-                    # feeding the key comes straight from the measurement,
-                    # which removes the race with the asynchronous add_bits callback.
-                    self.measured_bits.append(measured_bit)
-                    self.trigger_apd(measured_bit)
+                  
+                    self.trigger_apd(sent_state)
 
                     self.qubit_received = True
                     self.received_qubit_count += 1
@@ -83,13 +75,23 @@ class ReceptionMixin:
             else:
                 self.finished = True
 
-    #def close_communication(self):
-    #    self.communication_finished.set()  # unblock anyone waiting
-    #    self.clk.stop()
+    # Measures the qubit in the current basis, fires the matching APD
+    # (simulation side effect) and returns the measured bit.
+    def trigger_apd(self, qubit : qutip.qobj):
+        # Measure the qubit in the chosen basis
+        if(len(self.chosen_bases) == 0):
+            return None
 
-    # Fires the matching APD (simulation side effect).
-    def trigger_apd(self, measured_bit : int):
+        basis_state_0 = self.STATES[(0, self.chosen_bases[-1])]
+        basis_state_1 = self.STATES[(1, self.chosen_bases[-1])]
+        measured_bit = qutip.measurement.measure(qubit,[qutip.ket2dm(basis_state_0), qutip.ket2dm(basis_state_1)])[0]
+
         if measured_bit == 0:
             self.apd0.receive_photon()
         elif measured_bit == 1:
             self.apd1.receive_photon()
+
+        return measured_bit
+
+    def read_value(self, value : int):
+        self.measured_bits.append(value)

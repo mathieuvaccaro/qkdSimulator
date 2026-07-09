@@ -2,6 +2,10 @@ import threading
 import components.clock as clock  # We use clock.py
 from utils.colors import bcolors
 
+"""
+Un apd permet "simplement" la lecture d'un photon, il fonctionne d'une manière particulière (cf. rapport)
+"""
+
 # Class APD represents an avalanche photodiode in Gated Mode.
 # Each APD is linked with a bit (linked_bit)
 

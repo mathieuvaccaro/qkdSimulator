@@ -15,7 +15,7 @@ protocol = "bb84" # for now only bb84 is compatible
 #  \___ \ / _ \ '_ \ / _` |/ _ \ '__|
 #  ____) |  __/ | | | (_| |  __/ |   
 # |_____/ \___|_| |_|\__,_|\___|_|   
-average_emitted_photon = 3 # Average number of emitted photon, in a perfect system, this value is 1. but it may be lower of higher (it's dangerous if higher) (poisson law)
+average_emitted_photon = 1 # Average number of emitted photon, in a perfect system, this value is 1. but it may be lower of higher (it's dangerous if higher) (poisson law)
 # if -1, always emit 1 photon                                   
                                     
 
@@ -25,8 +25,9 @@ average_emitted_photon = 3 # Average number of emitted photon, in a perfect syst
 # | |    / _` | '_ \ / _` | |  | |/ _ \/ __|/ _ \/ __|
 # | |___| (_| | | | | (_| | |  | | (_) \__ \  __/\__ \
 #  \_____\__,_|_| |_|\__,_|_|  |_|\___/|___/\___||___/
-quantum_canal_bit_loss = 2 # Noise on quantum canal (in %)
-quantum_canal_bit_flip = 3 # Add x/2 % of qber (for bb84 ofc)                                                   
+""" La somme ne doit pas dépasser 100 (sinon ca sert a rien)"""
+quantum_canal_bit_loss = 0 # Noise on quantum canal (in %)
+quantum_canal_bit_flip = 0 # Add x/2 % of qber (for bb84 ofc)                                                   
 
 #  _____               _                            ____  _               
 # |  __ \             (_)                  ___     / __ \| |              
@@ -44,7 +45,7 @@ qber_tolerance = 11 # Tolerance of qber coeff (default : 11 for BB84 proptoocl)
 #   / /\ \ |  ___/| |  | / __|
 #  / ____ \| |    | |__| \__ \
 # /_/    \_\_|    |_____/|___/
-perfect_apd = False # Is apds use is perfect ? (overwrite follows values)
+perfect_apd = True # Is apds use is perfect ? (overwrite follows values)
 breakdown_voltage = 7 # def : 7
 dead_time = 300 #def : 300
 bias_voltage = 5 #def : 5
@@ -62,8 +63,8 @@ gate_on_duration = 20 #def : 20
 # Eve n'est présente sur le canal que si une attaque est active.
 # Certaines attaques sont simulés réalistiquement (exemple PNS) tandis que d'autre sont simulés hypotétiquement (trojan horse). Les attaques simulés de manière réaliste ont un commentaire X a coté
 intercept_and_resent = False # X
-PNS = False                  # X
-TrojanHorse = True
+PNS = True                  # X
+TrojanHorse = False
 
 #     /\                                   
 #    /  \   _ __  _ __   _____  _____  ___ 

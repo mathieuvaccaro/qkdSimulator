@@ -2,6 +2,10 @@ import settings
 from random import sample as rng_s
 
 
+"""Le calcul du qber fonctionne de la manière suivante :
+On récupére tous les bits retenus après le sifting, on en tire au sort un certain nombre (qber_percent %) et on regarde la portion dont les bits diverge
+Si cette valeur dépasse (qber_tolerance %) alors la communication est aborté."""
+
 # For now, we simplify qber section (by centralization)
 def qber_calculus(bits_alice : list[int], bits_bob : list[int]) -> float:
     nb_qber = int(settings.qber_percent / 100 * len(bits_alice))

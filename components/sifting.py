@@ -3,13 +3,16 @@ import components.sender as sender
 from random import randint as rng
 from utils.colors import bcolors
 
+"""L'intérêt du sifting est le suivante :
+Alice et Bob échangent leurs bases publiquement et garde seulement les bits ayant été encodé et lu avec la même base
+"""
+
 def sifting(self, other_bases : list[int]) -> list[int]:
     key = []
     if(len(other_bases) != len(self.chosen_bases)):
         raise Exception(f"Basis aren't same length ! communication abortin {len(self.chosen_bases)} / {len(other_bases)}")
     
     for i in range(len(self.chosen_bases)):
-        # Same basis used. it's useless to see if basis isn't -1 bc only receiver basis can be -1
         if(other_bases[i] == self.chosen_bases[i]):
             if(isinstance(self, receiver.Receiver)):
                 key.append(self.measured_bits[i])

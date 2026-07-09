@@ -1,3 +1,4 @@
+"""L'attaque trojan horse repose sur le fait d'emttre un faisceau lumineux vers le récepteur """
 
 from utils.colors import bcolors
 from intercept.factory import Intercept
@@ -22,19 +23,18 @@ class TrojanHorse(Intercept):
             if(self.qubit_received == True):
                 self.already_receive_photon()
             else:
+                # Eve mesure dans la base de Bob (trojan horse) : trigger_apd
+                # mesure sent_state dans chosen_bases[-1] et renvoie le bit.
                 chosen_basis = self.get_cible_basis()
-                basis_state_0 = self.STATES[(0, chosen_basis)]
-                basis_state_1 = self.STATES[(1, chosen_basis)]
-
-                measured_bit = qutip.measurement.measure(
-                    sent_state, [qutip.ket2dm(basis_state_0), qutip.ket2dm(basis_state_1)]
-                )[0]
-
                 self.chosen_bases.append(chosen_basis)
-                self.measured_bits.append(measured_bit)
-                self.trigger_apd(measured_bit)
 
+                measured_bit = self.trigger_apd(sent_state)
+                self.measured_bits.append(measured_bit)
+
+                # Comme la base est celle de Bob, réémettre l'état mesuré
+                # n'introduit aucune erreur : l'attaque reste indétectable.
                 resent_qubit = self.STATES[(measured_bit, chosen_basis)]
+                self.send_qubit(resent_qubit)
 
                 self.qubit_received = True
                 self.received_qubit_count += 1

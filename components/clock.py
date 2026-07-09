@@ -2,9 +2,14 @@ import threading
 import time
 from typing import Callable
 
+"""
+La clock permet la synchronisation de tout le projet, pour ajouter une fonction a la clock qui sera automatiquement appelé de manière synchrone il faut
+appele la fonction subscribe avec la fonction
+"""
+
 class Clock:
     def __init__(self, interval_ms: float):
-        self.interval_ms = interval_ms              # période en ms (API publique)
+        self.interval_ms = interval_ms              # période en ms
         self._interval_s = interval_ms / 1000.0     # version interne en s
         self._callbacks: list[Callable[[], None]] = []
         self._stop_event = threading.Event()
@@ -36,7 +41,7 @@ class Clock:
             next_tick += self._interval_s           # arithmétique en s
             delay = next_tick - time.monotonic()
             if delay > 0:
-                self._stop_event.wait(delay)        # wait() attend des secondes
+                self._stop_event.wait(delay)
 
     def _tick(self):
         with self._lock:

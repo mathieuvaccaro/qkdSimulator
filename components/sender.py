@@ -26,8 +26,11 @@ class Sender:
         self.STATES = pm.get_states()
 
     def emit_qubit(self):
+        """La fonction emit_qubit se lance de manière synchrone avec la clock commune (défini dans manager.py)
+        A chaque tick un qubit est encodé de manière aléatoire (bit et base random) et est ensuite transmis sur le canal quantique (quantum_canal.py)"""
+        
         # On s'arrête dès que tout le message a été émis (exactement message_size qubits).
-        if(self.sent_qubit_count >= self.message_size):
+        if(self.sent_qubit_count == self.message_size):
             return
 
         bit = rng(0, 1)
@@ -36,20 +39,20 @@ class Sender:
         self.chosen_bases.append(chosen_basis)
         qubit = self.STATES[(bit, chosen_basis)]
 
-        # How much photon will be sended
-        if(settings.average_emitted_photon == -1):
-            number_photon_emitted = 1
-        else:
-            number_photon_emitted = np.random.poisson(settings.average_emitted_photon)
-        # Emit n photons
+        # Le nombre de photon émis par le sender suit une loi de poisson (voir settings.py)
+        # si le settings.average_emitted_photon == -1, alors on émet tout le temps un et un seul photon
+        number_photon_emitted = 1 if settings.average_emitted_photon == -1 else np.random.poisson(settings.average_emitted_photon)
         for _ in range(number_photon_emitted):
             self.send_qubit(qubit)
 
         self.sent_qubit_count += 1
+
         pb.progress_bar(self.sent_qubit_count, self.message_size)
 
         if(self.sent_qubit_count >= self.message_size):
-            self.communication_finished.set()   # unblock anyone waiting
+            # Débloque le manager.py permettant de passer a la suite
+            self.communication_finished.set()
 
+    # Emission du qubit sur le canal
     def send_qubit(self, qubit : qutip.qobj):
         self.quantum_channel.send_qubit(qubit)

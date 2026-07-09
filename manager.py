@@ -11,7 +11,13 @@ import components.qber as qber
 from utils.percent_corrupted_key import how_much_key_corrupted
 from attacks.attack_manager import get_active_attack
 
+"""
+Le simulateur fonctionne grâce a une clock global. Dans un cas réel il faudrait utilisé deux clocks distinctes synchronisé, mais bon personne n'est parfait....
+"""
+
 def init_communication():
+    """Le point de départ du projet"""
+
     print("Initialisation en cours...")
     # Creating channel
     quantum_canal = QuantumCanal()
@@ -20,9 +26,26 @@ def init_communication():
     commune_clk = clock.Clock(settings.message_interval) # We actually linked in by manager, but the idea is linked clock with public_canal.py !
 
     # Creating apd
-    apd0 = apd.Apd(0, clock_period=settings.message_interval, gate_off_duration=0, gate_on_duration=1000, dead_time=0) # For now we create perfect apd
-    apd1 = apd.Apd(1, clock_period=settings.message_interval, gate_off_duration=0, gate_on_duration=1000, dead_time=0)
-    
+    if(settings.perfect_apd):
+        apd0 = apd.Apd(0, clock_period=settings.message_interval, gate_off_duration=0, gate_on_duration=1000, dead_time=0) # For now we create perfect apd
+        apd1 = apd.Apd(1, clock_period=settings.message_interval, gate_off_duration=0, gate_on_duration=1000, dead_time=0)
+    else:
+        apd0 = apd.Apd(
+                    linked_bit=0, 
+                    clock_period=settings.message_interval, 
+                    gate_off_duration=settings.gate_off_duration, 
+                    gate_on_duration=settings.gate_on_duration, 
+                    dead_time=settings.dead_time
+                    )
+        
+        apd1 = apd.Apd(
+                    linked_bit=1, 
+                    clock_period=settings.message_interval, 
+                    gate_off_duration=settings.gate_off_duration, 
+                    gate_on_duration=settings.gate_on_duration, 
+                    dead_time=settings.dead_time
+                    )
+        
     # Creating entities
     Alice = sender.Sender(quantum_canal, commune_clk)
     Bob = receiver.Receiver(apd0, apd1, quantum_canal, commune_clk) # And linked with apd
@@ -43,8 +66,12 @@ def init_communication():
     eve_active = AttackClass is not None
 
     if(eve_active):
-        apdEve0 = apd.Apd(0, clock_period=settings.message_interval, gate_off_duration=0, gate_on_duration=1000, dead_time=0) # For now we create perfect apd
-        apdEve1 = apd.Apd(1, clock_period=settings.message_interval, gate_off_duration=0, gate_on_duration=1000, dead_time=0)
+        if(settings.perfect_apd):
+            apdEve0 = apd.Apd(0, clock_period=settings.message_interval, gate_off_duration=0, gate_on_duration=1000, dead_time=0) # For now we create perfect apd
+            apdEve1 = apd.Apd(1, clock_period=settings.message_interval, gate_off_duration=0, gate_on_duration=1000, dead_time=0)
+        else:
+            apdEve0 = apd.Apd(0, clock_period=settings.message_interval, gate_off_duration=0, gate_on_duration=1000, dead_time=0) # For now we create perfect apd
+            apdEve1 = apd.Apd(1, clock_period=settings.message_interval, gate_off_duration=0, gate_on_duration=1000, dead_time=0)
         Eve = AttackClass(apdEve0, apdEve1, quantum_canal, commune_clk, Alice, Bob)
 
         quantum_canal.setInterceptor(Eve)
@@ -96,6 +123,8 @@ def init_communication():
     else:
         print(bcolors.FAIL + f"Qber is very high : {qber_value}. Communication aborting ..."+ bcolors.ENDC)
    
+    print(f"Key size : {len(keyAlice)}")
+    print(f"Key : {keyAlice}")
 
     if(eve_active):
         keyEve = sifting.eve_sifting(Eve, Alice.chosen_bases, Bob.chosen_bases)
