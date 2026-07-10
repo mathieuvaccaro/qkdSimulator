@@ -19,15 +19,23 @@ Afin de détecter si le bit est perdu, une fonction "detect_lost_qubit" se lance
 class Receiver:
 
     def __init__(self, apd0: apd.Apd, apd1: apd.Apd, quantum_channel, clk: clock.Clock):
+        """Initialise le receveur (Bob) avec ses deux apd, le canal quantique et la clock commune
+
+        Args:
+            apd0 (apd.Apd): apd associé au bit 0
+            apd1 (apd.Apd): apd associé au bit 1
+            quantum_channel: canal quantique par lequel arrivent les qubits
+            clk (clock.Clock): clock commune de synchronisation
+        """
         self.apd0 = apd0
         self.apd1 = apd1
         self.quantum_channel = quantum_channel
         self.clk = clk
         self.finished = False
         
-        # Chaque tick : une base et un bit pour garder le tout aligner
         self.chosen_bases = []
-        self.measured_bits = []
+        self.measured_bits = [-1] * settings.message_size
+        self.pending_index = None  # index du tick du qubit en cours de mesure
 
         self.qubit_received = False
         self.message_size = settings.message_size  # Nombre de qubit par QKD
@@ -44,8 +52,9 @@ class Receiver:
         if(self.finished == False):
             with self._lock:
                 if self.qubit_received == False:
-                    self.measured_bits.append(-1)
-                    self.chosen_bases[-1] = -1
+                    # Aucun photon durant le tick :
+                    if len(self.chosen_bases) > 0:
+                        self.chosen_bases[-1] = -1
                     self.received_qubit_count += 1
                     if self.received_qubit_count == self.message_size:
                         self.close_communication()
@@ -63,14 +72,18 @@ class Receiver:
 
     def receive_qubit(self, qubit : qutip.qobj):
         """Cette fonction est appelé par le canal quantique lorsuqe un qubit est arrivé
+
         Args:
-        qubit:  qubit recu par le canal.
-        """
+            qubit (qutip.qobj): qubit recu par le canal.
+        """        
         with self._lock:
             if(self.received_qubit_count < self.message_size):
                 if(self.qubit_received == True):
                     self.already_receive_photon()
                 else:
+                    # On mémorise le tick de ce qubit pour que read_value (appelé
+                    # par le thread de l'APD) écrive le bit dans le bon slot.
+                    self.pending_index = len(self.chosen_bases) - 1
                     self.trigger_apd(qubit)
 
                     self.qubit_received = True
@@ -90,10 +103,11 @@ class Receiver:
     def trigger_apd(self, qubit : qutip.qobj):
         """En pratique, les qubits sont envoyé dans un analyseur qui va transmettre le photon a un APD ou l'autre. Ici l'analyseur est entièrement simulé
         fictivement, dans le sens ou c'est juste une mesure qutip. Ensuite le photon est transmis a l'apd liée
-        
+
         Args:
-        qubit: qubit recu par le canal.
-        """
+            qubit (qutip.qobj): qubit recu par le canal.
+        """        
+
         # Measure the qubit in the chosen basis
         if(len(self.chosen_bases) == 0):
             return
@@ -110,8 +124,13 @@ class Receiver:
 
     def read_value(self, value : int):
         """Cette fonction est appelé par l'APD lui même qui sert de gestionnaire avant de faire une action. Ici c'est juste ajouter un élément dans un tablea
-        
+
         Args:
-        value: Bit (binaire) final lu par l'apd
+            value: Bit (binaire) final lu par l'apd
+
         """
-        self.measured_bits.append(value)
+
+        # On écrit dans le slot du tick mémorisé (pending_index) cela pemert de toujours lire malgrès le possible décalage de temps
+        idx = self.pending_index
+        if idx is not None and 0 <= idx < len(self.measured_bits):
+            self.measured_bits[idx] = value

@@ -9,20 +9,22 @@ import threading
 import protocols.protocol_manager as pm
 import utils.progress_bar as pb
 
-
-# Emitting exactly one photon is very difficult; one method is to use an
-# attenuated laser. In this simulation we approximate that with an average
-# number of emitted photons (perfectly 1 here).
 class Sender:
     message_size = settings.message_size
 
     def __init__(self, quantum_channel : quantum_canal.QuantumCanal, clk: clock.Clock):
+        """Initialise l'émetteur (Alice) avec le canal quantique et la clock commune
+
+        Args:
+            quantum_channel (quantum_canal.QuantumCanal): canal quantique d'émission
+            clk (clock.Clock): clock commune de synchronisation
+        """
         self.quantum_channel = quantum_channel
         self.sent_qubit_count = 0
         self.chosen_bases = []
         self.sent_bits = []
         self.clk = clk
-        self.communication_finished = threading.Event()  # lets main know when it's finished
+        self.communication_finished = threading.Event()
         self.STATES = pm.get_states()
 
     def emit_qubit(self):
@@ -53,6 +55,10 @@ class Sender:
             # Débloque le manager.py permettant de passer a la suite
             self.communication_finished.set()
 
-    # Emission du qubit sur le canal
     def send_qubit(self, qubit : qutip.qobj):
+        """Émet le qubit sur le canal quantique
+
+        Args:
+            qubit (qutip.qobj): qubit à émettre
+        """
         self.quantum_channel.send_qubit(qubit)

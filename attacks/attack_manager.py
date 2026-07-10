@@ -11,9 +11,13 @@ ATTACK_REGISTRY = [
 ]
 
 
-# Renvoie la classe d'attaque active d'après les flags de settings,
-# ou None si aucune attaque n'est activée (Eve absente du canal).
 def get_active_attack():
+    """Permet de récuperer l'attaque active d'après le fichier settings.py
+    Si aucune attaque n'est activé, retourne None
+
+    Returns:
+        type | None: classe de l'attaque active à instancier, None si aucune attaque n'est activée
+    """
     for flag, attack_cls in ATTACK_REGISTRY:
         if getattr(settings, flag, False):
             return attack_cls

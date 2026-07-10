@@ -1,35 +1,44 @@
-import threading
 import components.clock as clock  # We use clock.py
 from utils.colors import bcolors
 
 """
 Un apd permet "simplement" la lecture d'un photon, il fonctionne d'une manière particulière (cf. rapport)
+Pour faciliter la chose dans un programme python, nous avons approximé le circuit quanitque par un circuit électronique
 """
 
-# Class APD represents an avalanche photodiode in Gated Mode.
-# Each APD is linked with a bit (linked_bit)
+def approx_equal(x : float, y : float, tolerance=0.001) -> bool:
+    """Une simple fonction auxiliaire permettant de savoir si deux nombre sont approximativement égaux
 
-# To simplify, we use only "classic" physics. No superposition, no photon, etc.
-# We approximate the quantum circuit with an electronic circuit.
+    Args:
+        x (int): nombre 1
+        y (int): nombre 2
+        tolerance (float, optional): tolerance. Defaults to 0.001.
 
-
-def approx_equal(x : int, y : int, tolerance=0.001) -> bool:
+    Returns:
+        bool: True si les nombres sont approximativement égaux, False sinon
+    """    
     if x + y == 0:
         return abs(x - y) <= tolerance
     return abs(x - y) <= 0.5 * tolerance * abs(x + y)
 
 
 class Apd:
+    """Objets Apd
 
-    # linked_bit         : bit of the detector (0 or 1)
-    # breakdown_voltage  : V_br (in V)
-    # dead_time          : dead time, in MILLISECONDS
-    # bias_voltage       : V_dc < V_br  /!\  (constant DC bias)
-    # gate_voltage       : voltage added during the gate window
-    # gate_on_duration   : duration (in ms) during which detection is enabled
-    # gate_off_duration  : duration (in ms) during which detection is disabled
-    # clock_period       : simulated internal clock period (in ms)
-    
+    Variables:
+        linked_bit         : bit associé au détecteur (0 ou 1)
+        breakdown_voltage  : V_br (in V)
+        dead_time          : dead time, en ms
+        bias_voltage       : V_dc < V_br  /!\  (tension constante)
+        gate_voltage       : tension ajouté durant le mode geiger
+        gate_on_duration   : Durée (en ms) durant laquel la détection est Actif
+        gate_off_duration  : Durée (en ms) durant laquel la détection est Inactif
+        clock_period       : Clock commune
+
+    Raises:
+        ValueError: Renvoie une erreur si certaines conditions d'usage ne sont pas respectés
+    """    
+
     def __init__(self, linked_bit, breakdown_voltage=7, dead_time=300,
                  bias_voltage=5, gate_voltage=5,
                  gate_off_duration=20, gate_on_duration=20, clock_period=10):
@@ -59,19 +68,23 @@ class Apd:
 
         self.gate_open = False  # True while the detection window is open
 
-        self.is_running = True
-        self.photon_event = threading.Event()
         self.gate_timer = 0
 
-        # If dead_time_elapsed >= dead_time -> ready to detect.
-        # If dead_time_elapsed <  dead_time -> currently in dead time.
+        # Si dead_time_elapsed >= dead_time -> la détection est actif
+        # Si dead_time_elapsed <  dead_time -> la détection est inactif
         self.dead_time_elapsed = self.dead_time
         
     def set_parent(self, parent):
+        """Défini le parent (le receveur) auquel l'apd transmet le bit détecté
+
+        Args:
+            parent: entité recevant les bits lus (Receiver ou intercepteur)
+        """
         self.parent = parent
 
-    # Create the clock, subscribe the per-tick callbacks and start it
     def start_clock(self):
+        """Création de la clock et abonnement des fonctions
+        """        
         self.clk = clock.Clock(self.clock_period)
         self.clk.subscribe(self.update_gate)
         self.clk.subscribe(self.update_voltage)
@@ -79,65 +92,46 @@ class Apd:
         self.clk.subscribe(self.update_dead_time)
         self.clk.start()
 
-    # Switch between linear and geiger mode depending on the bias voltage
     def update_mode(self):
+        """On va mettre à jour le mode en fonction du voltage actuelle. (indirectement, si la tension de gate à été ajouté ou non)
+        """        
         self.mode = "geiger" if self.voltage > self.breakdown_voltage else "linear"
 
-    # Gating window (everything in ms):
-    #   timer in [0, gate_on_duration[                       -> detection enabled
-    #   timer in [gate_on_duration, on + off[                -> detection disabled
-    # then the timer wraps around and the cycle repeats.
-    # Called once per tick (the timer advances by clock_period ms each tick).
     def update_gate(self):
+        """L'apd va s'activer uniquemnt durant une certaine période au moment de la détection souhaité
+        time appartient [0, gate_on_duration[ -> Détection activé
+        time appartient [gate_in_duration, on + off[ -> Détection désactive
+        Cette fonction est appelé une fois par tick
+        """        
         self.gate_timer += self.clock_period
         if self.gate_timer >= self.gate_on_duration + self.gate_off_duration:
             self.gate_timer = 0
+
         self.gate_open = self.gate_timer < self.gate_on_duration
 
-    # Update the APD bias voltage depending on the gating window
     def update_voltage(self):
+        """Mise à jour de la tension en fonction du mode de détection
+        """        
         if self.gate_open:
             self.voltage = self.bias_voltage + self.gate_voltage
         else:
             self.voltage = self.bias_voltage
 
-    # While a dead time is in progress, advance the counter by clock_period ms
-    # each tick. Once dead_time_elapsed reaches dead_time, the detector is
-    # ready again.
     def update_dead_time(self):
+        """Mise à jour du dead_time, on va juste incrémenter un compteur a chaque tick 
+        """        
         if self.dead_time_elapsed < self.dead_time:
             self.dead_time_elapsed += self.clock_period
-            if self.dead_time_elapsed == self.dead_time:
-                print(bcolors.OKGREEN + f"APD rearmed ({self.linked_bit})" + bcolors.ENDC)
 
-    # Triggered externally when a photon reaches the detector
     def receive_photon(self):
-        self.photon_event.set()
+        """Réception + détection du photon. Appelé depuis la classe reception.
+        La détection utilise l'état de la gate à l'instant exact de la réception.
+        """
+        if(self.gate_open and self.mode == "geiger" and self.dead_time_elapsed >= self.dead_time):
+            self.dead_time_elapsed = 0  # start the dead time
+            self.parent.read_value(self.linked_bit)
 
-    # For now detection is automatic (provided we are in geiger mode and within
-    # the detection window).
-
-    # Blocking function (run it in its own thread).
-    # For now detect_photon returns nothing; later it will return True when a
-    # photon is correctly detected.
-    def detect_photon(self):
-        while self.is_running:
-            self.photon_event.wait()   # wait for a photon
-            self.photon_event.clear()  # lower the signal flag
-
-            if not self.gate_open:
-                print(bcolors.WARNING + f"Gate is closed, photon was discarded ({self.linked_bit})!" + bcolors.ENDC)
-            elif self.mode == "linear":
-                print(bcolors.WARNING + f"APD isn't in geiger mode, photon was discarded ({self.linked_bit})!" + bcolors.ENDC)
-            elif self.dead_time_elapsed < self.dead_time:
-                print(bcolors.WARNING + f"APD is in a dead time, photon was discarded ({self.linked_bit})!" + bcolors.ENDC)
-            
-            
-            # Good detection !
-            else:
-                self.dead_time_elapsed = 0  # start the dead time
-                self.parent.read_value(self.linked_bit)
-
-    # Start the simulation: launches the (single) internal clock.
     def run(self):
+        """Lance la simulation de l'apd en démarrant sa clock interne
+        """
         self.start_clock()
