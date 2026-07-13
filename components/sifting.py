@@ -47,7 +47,6 @@ def eve_sifting(eve, alice_bases : list[int], bob_bases : list[int]) -> list[int
         if(len(eve.chosen_bases) < eve.message_size):
             eve.chosen_bases.append(-1)
             eve.measured_bits.append(-1)    
-    print(f"Eve : {len(eve.chosen_bases)}")
     key = []
     for i in range(len(eve.chosen_bases)):
         if(alice_bases[i] == bob_bases[i]):

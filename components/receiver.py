@@ -38,6 +38,7 @@ class Receiver:
         self.pending_index = None  # index du tick du qubit en cours de mesure
 
         self.qubit_received = False
+        self.qubit_analyzed = False
         self.message_size = settings.message_size  # Nombre de qubit par QKD
         self.received_qubit_count = 0
         self.communication_finished = threading.Event()
@@ -47,18 +48,19 @@ class Receiver:
         self.STATES = pm.get_states() # Récupère le state en fonction du protocol (pour l'instant on a que BB84)
 
     def detect_lost_qubit(self):
-        """Permet la détection des pertes grâce à un simple chronomètre de tolerance_message_not_receive ms"""
         time.sleep(settings.tolerance_message_not_receive / 1000)
         if(self.finished == False):
             with self._lock:
-                if self.qubit_received == False:
-                    # Aucun photon durant le tick :
+                if self.qubit_analyzed == False:
+                    # Perte : soit le photon n'est jamais arrivé, soit l'APD ne l'a pas détecté
                     if len(self.chosen_bases) > 0:
                         self.chosen_bases[-1] = -1
-                    self.received_qubit_count += 1
-                    if self.received_qubit_count == self.message_size:
-                        self.close_communication()
+                self.received_qubit_count += 1          # <- une seule fois par tick
+                if self.received_qubit_count == self.message_size:
+                    self.close_communication()
                 self.qubit_received = False
+                self.qubit_analyzed = False
+
 
     def already_receive_photon(self):
         """Ca arrive qu'on recoit plusieurs photons, dans ce cas, le comportement du receveur peut varier"""
@@ -87,8 +89,7 @@ class Receiver:
                     self.trigger_apd(qubit)
 
                     self.qubit_received = True
-                    self.received_qubit_count += 1
-                    
+                    #self.received_qubit_count += 1
             if self.received_qubit_count == self.message_size:
                 self.close_communication()
 
@@ -132,5 +133,6 @@ class Receiver:
 
         # On écrit dans le slot du tick mémorisé (pending_index) cela pemert de toujours lire malgrès le possible décalage de temps
         idx = self.pending_index
+        self.qubit_analyzed = True
         if idx is not None and 0 <= idx < len(self.measured_bits):
             self.measured_bits[idx] = value

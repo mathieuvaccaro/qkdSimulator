@@ -6,9 +6,9 @@ r"""
  | |__| | | (_) | |_) | (_| | |
   \_____|_|\___/|_.__/ \__,_|_|
 """
-
-message_size = 4000 # Nombre de qubit échangé au total                              
-message_interval = 2 # Intervale en ms entre chaque qubit échange (par défaut 2)
+# Les paramètres globaux sotn aussi atifs pour les tests !
+message_size = 500 # Nombre de qubit échangé au total                              
+message_interval = 4 # Intervale en ms entre chaque qubit échange (par défaut 4ms) [mettre uen valeur inféireur peut introduire des erreurs !]
 protocol = "bb84" # Protocole (pour l'instnat seulemetn bb84 est compatible)
 
 r"""
@@ -20,7 +20,7 @@ r"""
  |_____/ \___|_| |_|\__,_|\___|_|   
 """
  
-average_emitted_photon = 0.3 # Nombre de moyen de photon émis par le sender (suit une loi de poisson). -1 = toujours 1 photon (désactive PNS !)
+average_emitted_photon = -1 # Nombre de moyen de photon émis par le sender (suit une loi de poisson). -1 = toujours 1 photon (désactive PNS !)
                                     
 r"""
    _____                  _    _                     
@@ -56,9 +56,11 @@ r"""
   / ____ \| |    | |__| \__ \
  /_/    \_\_|    |_____/|___/
 """
-perfect_apd = False # Mettre un apd parfait (écrase les valeurs suivante)
+perfect_apd_bob = False # Mettre un apd parfait (écrase les valeurs suivante)
+perfect_apd_eve = False
 breakdown_voltage = 7 # def : 7
-dead_time = 3 #def : 3 (en ms)
+dead_time_min = 2 #def : 2 (en ms)
+dead_time_max = 6 # def : 6
 bias_voltage = 5 #def : 5
 gate_off_duration = message_interval/2 #def : message_interval/2
 gate_on_duration = message_interval/2 #def : message_interval/2
@@ -75,8 +77,9 @@ r"""
 # Mettre un flag d'attaque à True pour l'activer (une seule à la fois).
 # Eve n'est présente sur le canal que si une attaque est active.
 # Certaines attaques sont simulés réalistiquement (exemple PNS) tandis que d'autre sont simulés hypotétiquement (trojan horse). Les attaques simulés de manière réaliste ont un commentaire X a coté
+eve_present = False # Je le emts pour l'insant mais faut l'nelver hein
 intercept_and_resent = False # X
-PNS = True                  # X
+PNS = False                  # X
 TrojanHorse = False
 
 r"""

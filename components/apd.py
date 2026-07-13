@@ -1,5 +1,6 @@
 import components.clock as clock  # We use clock.py
 from utils.colors import bcolors
+import random
 
 """
 Un apd permet "simplement" la lecture d'un photon, il fonctionne d'une manière particulière (cf. rapport)
@@ -28,7 +29,7 @@ class Apd:
     Variables:
         linked_bit         : bit associé au détecteur (0 ou 1)
         breakdown_voltage  : V_br (in V)
-        dead_time          : dead time, en ms
+        dead_time_min/_max          : dead time, en ms
         bias_voltage       : V_dc < V_br  /!\  (tension constante)
         gate_voltage       : tension ajouté durant le mode geiger
         gate_on_duration   : Durée (en ms) durant laquel la détection est Actif
@@ -39,7 +40,7 @@ class Apd:
         ValueError: Renvoie une erreur si certaines conditions d'usage ne sont pas respectés
     """    
 
-    def __init__(self, linked_bit, breakdown_voltage=7, dead_time=300,
+    def __init__(self, linked_bit, breakdown_voltage=7, dead_time_min=3, dead_time_max = 5,
                  bias_voltage=5, gate_voltage=5,
                  gate_off_duration=20, gate_on_duration=20, clock_period=10):
 
@@ -57,7 +58,8 @@ class Apd:
         self.bit_received = False
         self.linked_bit = linked_bit
 
-        self.dead_time = dead_time  # in ms
+        self.dead_time_min = dead_time_min # in ms
+        self.dead_time_max = dead_time_max # in ms
 
         self.gate_off_duration = gate_off_duration  # in ms
         self.gate_on_duration = gate_on_duration    # in ms
@@ -70,8 +72,11 @@ class Apd:
 
         self.gate_timer = 0
 
+        # dead time change a chaque photon recu
         # Si dead_time_elapsed >= dead_time -> la détection est actif
         # Si dead_time_elapsed <  dead_time -> la détection est inactif
+        self.dead_time = round(random.uniform(self.dead_time_min, self.dead_time_max), 2)
+
         self.dead_time_elapsed = self.dead_time
         
     def set_parent(self, parent):
@@ -129,6 +134,8 @@ class Apd:
         """
         if(self.gate_open and self.mode == "geiger" and self.dead_time_elapsed >= self.dead_time):
             self.dead_time_elapsed = 0  # start the dead time
+            self.dead_time = round(random.uniform(self.dead_time_min, self.dead_time_max), 2) # Mise a jour du nouveau dead time
+
             self.parent.read_value(self.linked_bit)
 
     def run(self):

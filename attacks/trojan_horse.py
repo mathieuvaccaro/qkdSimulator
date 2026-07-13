@@ -27,7 +27,6 @@ class TrojanHorse(Intercept):
     """    
         
     def __init__(self, apdEve0 : Apd, apdEve1 : Apd, quantum_canal : QuantumCanal, commune_clk : Clock, alice : Sender, bob : Receiver):
-        print(bcolors.OKCYAN + "[ATTACK TROJAN HORSE] ..." + bcolors.ENDC)
         self.alice = alice
         super().__init__(apdEve0, apdEve1, quantum_canal, commune_clk, alice, bob)
 

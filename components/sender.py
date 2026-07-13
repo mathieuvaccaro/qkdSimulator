@@ -10,7 +10,6 @@ import protocols.protocol_manager as pm
 import utils.progress_bar as pb
 
 class Sender:
-    message_size = settings.message_size
 
     def __init__(self, quantum_channel : quantum_canal.QuantumCanal, clk: clock.Clock):
         """Initialise l'émetteur (Alice) avec le canal quantique et la clock commune
@@ -19,6 +18,7 @@ class Sender:
             quantum_channel (quantum_canal.QuantumCanal): canal quantique d'émission
             clk (clock.Clock): clock commune de synchronisation
         """
+        self.message_size = settings.message_size  # Nombre de qubit par QKD
         self.quantum_channel = quantum_channel
         self.sent_qubit_count = 0
         self.chosen_bases = []

@@ -20,7 +20,6 @@ class Pns(Intercept):
     """    
 
     def __init__(self, apdEve0, apdEve1, quantum_canal, commune_clk, Alice, Bob):
-        print(bcolors.OKCYAN + "[ATTACK PNS] ..." + bcolors.ENDC)
         super().__init__(apdEve0, apdEve1, quantum_canal, commune_clk)
         self.alice = Alice
         self.kept_states = [None] * self.message_size
