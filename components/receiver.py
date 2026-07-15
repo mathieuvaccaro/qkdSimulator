@@ -9,11 +9,13 @@ import settings
 import numpy as np
 import threading
 import components.quantum_canal as quantum_canal
+import random
 import protocols.protocol_manager as pm
 
 """La réception elle-même fonctionne de manière asynchrone grâce a "quantum_canal.py" qui appelle la fonction "receiver_qubit" directement.
 Cependant le choix de la base se fait en amont de manière synchrone (donc au même instant précisement que la création du qubit par sender.py)
 Afin de détecter si le bit est perdu, une fonction "detect_lost_qubit" se lance de manière synchrone en attendant un temps tolerance_message_not_receive ms. Si aucun bit n'est recu durant cette période, le qubit est considérer comme perdu (snif)
+Il n'y a pas de gestion de double click
 """
 
 class Receiver:
@@ -39,6 +41,7 @@ class Receiver:
 
         self.qubit_received = False
         self.qubit_analyzed = False
+        self.value_analyzed = [] # Bits déjà analysé dans le cas d'un double click event
         self.message_size = settings.message_size  # Nombre de qubit par QKD
         self.received_qubit_count = 0
         self.communication_finished = threading.Event()
@@ -80,16 +83,12 @@ class Receiver:
         """        
         with self._lock:
             if(self.received_qubit_count < self.message_size):
-                if(self.qubit_received == True):
-                    self.already_receive_photon()
-                else:
-                    # On mémorise le tick de ce qubit pour que read_value (appelé
-                    # par le thread de l'APD) écrive le bit dans le bon slot.
-                    self.pending_index = len(self.chosen_bases) - 1
-                    self.trigger_apd(qubit)
+                # On mémorise le tick de ce qubit pour que read_value (appelé
+                # par le thread de l'APD) écrive le bit dans le bon slot.
+                self.pending_index = len(self.chosen_bases) - 1
+                self.trigger_apd(qubit)
 
-                    self.qubit_received = True
-                    #self.received_qubit_count += 1
+                self.qubit_received = True
             if self.received_qubit_count == self.message_size:
                 self.close_communication()
 
@@ -125,14 +124,44 @@ class Receiver:
 
     def read_value(self, value : int):
         """Cette fonction est appelé par l'APD lui même qui sert de gestionnaire avant de faire une action. Ici c'est juste ajouter un élément dans un tablea
-
+        A ce stage on a pas gérer les double clicks, il le seront dans le fonction "addBitToKey()". On se contente d'ajouter dans un tableau
         Args:
             value: Bit (binaire) final lu par l'apd
-
         """
 
-        # On écrit dans le slot du tick mémorisé (pending_index) cela pemert de toujours lire malgrès le possible décalage de temps
-        idx = self.pending_index
+        # On ajoute la valeur dans la liste
+        self.value_analyzed.append(value)
         self.qubit_analyzed = True
-        if idx is not None and 0 <= idx < len(self.measured_bits):
-            self.measured_bits[idx] = value
+
+    def addBitToKey(self):
+        """Cette fonction est appelé de manière synchrone et permet d'ajouter le bit a la clé.
+        - Si il y a qu'un seul bit qui à été mesuré, il est simplement ajouté et l'index est incrémenter
+        - Si il y a aucun bit ajouté, l'index est incrémenter permettant de laisser le -1
+        - Si il y a plusieurs bits, le choix dépend du choix du paramètre dans settings.py. Soit les bits sont jetés (dangeureux) soit les bits sont choisi aléatoiremeent (pas dangeureux)
+        """
+        # La communication n'a pas encore commencé
+        if(self.pending_index == None):
+            return
+
+        # Aucun bit n'a été analysé
+        if(len(self.value_analyzed) == 0):
+            pass
+
+        # Un seul bit a été détecte
+        elif(len(self.value_analyzed) == 1):
+            self.measured_bits[self.pending_index] = self.value_analyzed[0]
+
+        # Plusieurs bits ont été analysé
+        else:
+            if(settings.many_clicks_gestion == "THROWS"):
+                self.chosen_bases[-1] = -1
+                pass
+            elif(settings.many_clicks_gestion == "RANDOM"):
+                r = random.randint(0, len(self.value_analyzed)-1)
+                self.measured_bits[self.pending_index] = self.value_analyzed[r]
+            else:
+                raise Exception(f"[ERROR] - Paramètre {settings.many_clicks_gestion} non reconnu !")
+        # Dans tous les cas on incrémente le compteur ;)
+        self.pending_index+=1
+        # Et on reset la liste des valeurs
+        self.value_analyzed.clear()

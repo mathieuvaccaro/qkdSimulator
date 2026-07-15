@@ -60,10 +60,11 @@ class Clock:
         with self._lock:
             callbacks = list(self._callbacks)
         for fn in callbacks:
-            try:
-                fn()
-            except Exception as e:
-                print(f"Erreur dans {fn.__name__}: {e}")
+            fn()
+            #try:
+            #    fn()
+            #except Exception as e:
+            #    print(f"Erreur dans {fn.__name__}: {e}")
 
     def start(self):
         """Démarre la clock dans un thread dédié

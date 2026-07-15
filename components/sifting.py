@@ -43,8 +43,8 @@ def eve_sifting(eve, alice_bases : list[int], bob_bases : list[int]) -> list[int
         list[int]: clé reconstruite par Eve
     """
     if(len(eve.chosen_bases) != len(alice_bases)):
-        # Dans l'éventualité, ou la base n'a pas assez de bit, c'est srement parce que le dernier bits n'est pas arrivé
-        if(len(eve.chosen_bases) < eve.message_size):
+        # Dans l'éventualité, ou la base n'a pas assez de bit, c'est srement parce que le(s) dernier(s) bits ne sont pas arrivé
+        while(len(eve.chosen_bases) < eve.message_size):
             eve.chosen_bases.append(-1)
             eve.measured_bits.append(-1)    
     key = []

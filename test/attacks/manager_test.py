@@ -13,12 +13,12 @@ import settings
 import manager
 from manager import QkdResult
 
-_ATTACK_FLAGS = ("intercept_and_resent", "PNS", "TrojanHorse")
+_ATTACK_FLAGS = ("intercept_and_resent", "PNS", "TrojanHorse", "DoubleClickEvent")
 
 
 def run_qkd(*, attack=None, message_size=settings.message_size, message_interval=settings.message_interval,
-            average_emitted_photon=-1, perfect_apd=True,
-            bit_loss=0.0, bit_flip=0.0) -> QkdResult:
+            average_emitted_photon=-1, perfect_apd=True, gate_off_duration = 0, gate_on_duration = 20,
+            bit_loss=0.0, bit_flip=0.0, many_clicks_gestion="THROWS") -> QkdResult:
     """Lance un échange QKD complet et renvoie un `QkdResult`.
 
     Args:
@@ -44,8 +44,10 @@ def run_qkd(*, attack=None, message_size=settings.message_size, message_interval
     settings.quantum_canal_bit_flip = bit_flip
     settings.progress_bar = False  # pas de barre de progression pendant les tests
 
-    settings.gate_off_duration = settings.gate_off_duration
-    settings.gate_on_duration = settings.gate_on_duration
+    settings.gate_off_duration = gate_off_duration
+    settings.gate_on_duration = gate_on_duration
+
+    settings.many_clicks_gestion = many_clicks_gestion
 
     for flag in _ATTACK_FLAGS:
         setattr(settings, flag, flag == attack)
@@ -56,11 +58,12 @@ def run_qkd(*, attack=None, message_size=settings.message_size, message_interval
 # Juste un comparatif entre différentes attaques et paramètres
 def comparatif():
     scenarios = [
-        ("Sans attaque (idéal)",      dict(attack=None, average_emitted_photon=-1)),
-        ("Sans attaque + bruit 10%",  dict(attack=None, average_emitted_photon=-1, bit_flip=10)),
-        ("Intercept & Resend",        dict(attack="intercept_and_resent", average_emitted_photon=-1)),
-        ("Trojan Horse",              dict(attack="TrojanHorse", average_emitted_photon=-1)),
-        ("PNS (moyenne 1.0 photon)",  dict(attack="PNS", average_emitted_photon=1.0, message_size=500)),
+        ("Sans attaque (idéal)", dict(attack=None, average_emitted_photon=-1)),
+        ("Sans attaque + bruit (flip) 10%", dict(attack=None, average_emitted_photon=-1, bit_flip=10)),
+        ("Intercept & Resend", dict(attack="intercept_and_resent", average_emitted_photon=-1)),
+        ("Trojan Horse", dict(attack="TrojanHorse", average_emitted_photon=-1)),
+        ("PNS (moyenne 1.0 photon)", dict(attack="PNS", average_emitted_photon=1.0, message_size=500)),
+        ("Double Click Event", dict(attacls="DoubleClickevent", average_emitted_photon=-1, many_clicks_gestion="THROWS"))
     ]
     print(f"{'Scénario':28s} | {'clé':>4s} | {'erreurs':>7s} | {'QBER':>6s} | {'Eve sait':>8s}")
     print("-" * 70)

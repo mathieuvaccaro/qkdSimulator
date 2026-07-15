@@ -64,6 +64,7 @@ dead_time_max = 6 # def : 6
 bias_voltage = 5 #def : 5
 gate_off_duration = message_interval/2 #def : message_interval/2
 gate_on_duration = message_interval/2 #def : message_interval/2
+many_clicks_gestion = "THROWS" # Gestion des double click ("THROWS" -> Tous les bits sont jeté, "RANDOM" -> Le bit est choisi au hasard)
 
 r"""
           _   _             _        
@@ -77,10 +78,14 @@ r"""
 # Mettre un flag d'attaque à True pour l'activer (une seule à la fois).
 # Eve n'est présente sur le canal que si une attaque est active.
 # Certaines attaques sont simulés réalistiquement (exemple PNS) tandis que d'autre sont simulés hypotétiquement (trojan horse). Les attaques simulés de manière réaliste ont un commentaire X a coté
-eve_present = False # Je le emts pour l'insant mais faut l'nelver hein
 intercept_and_resent = False # X
+
 PNS = False                  # X
+
 TrojanHorse = False
+
+DoubleClickEvent = False      # X
+emission_click_event = 10
 
 r"""
      /\                                   

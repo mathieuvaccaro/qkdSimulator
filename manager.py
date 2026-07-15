@@ -39,11 +39,6 @@ class QkdResult:
     final_key: list[int]         # clé d'Alice une fois les bits du QBER retirés
     qber: float                  # QBER estimé sur un échantillon aléatoire, en %
 
-    def eve_active(self) -> bool:
-        if(self.eve == None):
-            return False
-        return True
-
     def alice_len(self) -> int:
         return len(self.key_alice)
 
@@ -62,7 +57,7 @@ class QkdResult:
         return compteur
 
     def eve_knowledge(self) -> Optional[float]:
-        """pourcentage des bits de la clé d'Alice retrouvés par Eve (None sans attaque). """
+        """Pourcentage des bits de la clé d'Alice retrouvés par Eve (None sans attaque). """
         if self.key_eve is None:
             return None
         
@@ -125,6 +120,9 @@ def build_communication():
     commune_clk.subscribe(bob.prepare_bases)
     commune_clk.subscribe(alice.emit_qubit)
     commune_clk.subscribe(bob.detect_lost_qubit)
+
+    # Ajouter la gestion de clés
+    commune_clk.subscribe(bob.addBitToKey)
 
     apds = [apd0, apd1]
     eve = None
@@ -196,7 +194,7 @@ def print_report(res: QkdResult):
     else:
         print(bcolors.FAIL + f"Qber is very high : {res.qber}. Communication aborting ..." + bcolors.ENDC)
 
-    if(res.eve_active):
+    if(res.eve != None):
         if(len(res.key_eve) != len(res.key_alice)):
             print(bcolors.WARNING + f"Alice and Eve size's key aren't same :" + bcolors.ENDC)
         print(bcolors.FAIL + f"Eve got {how_much_key_corrupted(res.final_key, res.key_eve)} % of Alice key" + bcolors.ENDC)

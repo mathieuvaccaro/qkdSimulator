@@ -59,11 +59,6 @@ class Pns(Intercept):
         """            
         pass
 
-    def already_receive_photon(self, *args):
-        """Déjà gérer dans receive_qubit
-        """
-        pass
-
     def resolve_knowledge(self, alice_bases):
         """Mesure a posteriori des photons prélevés par Eve.
 
