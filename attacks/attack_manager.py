@@ -3,13 +3,15 @@ from attacks.intercept_and_resent import InterceptAndResent
 from attacks.PNS import Pns
 from attacks.trojan_horse import TrojanHorse
 from attacks.double_click_event import DoubleClickEvent
+from attacks.correlations_time import CorrelationTime
 
 # Liste des attaques disponible avec les classes héritant
 ATTACK_REGISTRY = [
-    ("intercept_and_resent", InterceptAndResent),
+    ("INTERCEPT_AND_RESENT", InterceptAndResent),
     ("PNS", Pns),
-    ("TrojanHorse", TrojanHorse),
-    ("DoubleClickEvent", DoubleClickEvent),
+    ("TROJAN_HORSE", TrojanHorse),
+    ("DOUBLE_CLICK_EVENT", DoubleClickEvent),
+    ("TIME_CORRELATION", CorrelationTime)
 ]
 
 

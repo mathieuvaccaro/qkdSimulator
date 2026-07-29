@@ -132,6 +132,7 @@ class Apd:
         """Réception + détection du photon. Appelé depuis la classe reception.
         La détection utilise l'état de la gate à l'instant exact de la réception.
         """
+
         if(self.gate_open and self.mode == "geiger" and self.dead_time_elapsed >= self.dead_time):
             self.dead_time_elapsed = 0  # start the dead time
             self.dead_time = round(random.uniform(self.dead_time_min, self.dead_time_max), 2) # Mise a jour du nouveau dead time

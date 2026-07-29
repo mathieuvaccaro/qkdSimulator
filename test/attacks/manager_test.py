@@ -13,7 +13,7 @@ import settings
 import manager
 from manager import QkdResult
 
-_ATTACK_FLAGS = ("intercept_and_resent", "PNS", "TrojanHorse", "DoubleClickEvent")
+_ATTACK_FLAGS = ("INTERCEPT_AND_RESENT", "PNS", "TROJAN_HORSE", "DOUBLE_CLICK_EVENT", "TIME_CORRELATION")
 
 
 def run_qkd(*, attack=None, message_size=settings.message_size, message_interval=settings.message_interval,
@@ -62,7 +62,7 @@ def comparatif():
         ("Sans attaque + bruit (flip) 10%", dict(attack=None, average_emitted_photon=-1, bit_flip=10)),
         ("Intercept & Resend", dict(attack="intercept_and_resent", average_emitted_photon=-1)),
         ("Trojan Horse", dict(attack="TrojanHorse", average_emitted_photon=-1)),
-        ("PNS (moyenne 1.0 photon)", dict(attack="PNS", average_emitted_photon=1.0, message_size=500)),
+        ("PNS (moyenne 1.0 photon)", dict(attack="PNS", average_emitted_photon=1.0)),
         ("Double Click Event", dict(attacls="DoubleClickevent", average_emitted_photon=-1, many_clicks_gestion="THROWS"))
     ]
     print(f"{'Scénario':28s} | {'clé':>4s} | {'erreurs':>7s} | {'QBER':>6s} | {'Eve sait':>8s}")

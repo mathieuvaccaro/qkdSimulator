@@ -40,7 +40,7 @@ class DoubleClickEvent(Intercept):
             qubit (qutip.qobj): qubit recu par le canal.
         """          
         with self._lock:
-            if(self.received_qubit_count <= self.message_size):
+            if(self.slot <= self.message_size):
                 if(self.qubit_received == True):
                     self.already_receive_photon()
                 else:
@@ -59,9 +59,7 @@ class DoubleClickEvent(Intercept):
 
     # Réémet vers Bob l'état reconstruit par Eve (from_eve=True côté canal).
     def emit_qubit(self, qubit : qutip.Qobj):
-        """La fonction emit_qubit se lance de manière synchrone avec la clock commune (défini dans manager.py)
-        A chaque tick un qubit est encodé de manière aléatoire (bit et base random) et est ensuite transmis sur le canal quantique (quantum_canal.py)
-
+        """La fonction est appelé par receive_qubits
         Args:
             qubit (qutip.Qobj): qubit à émettre sur le canal
         """

@@ -42,7 +42,7 @@ class Intercept(ReceptionMixin, SendingMixin):
         self.apd1 = apd1
         self.qubit_received = False
         self.message_size = settings.message_size  # Number of bits per QKD run
-        self.received_qubit_count = -1  # bit index, -1 because the sender starts at 0
+        self.slot = -1  # bit index, -1 because the sender starts at 0
         self._lock = threading.Lock()
 
         # (only) SENDING

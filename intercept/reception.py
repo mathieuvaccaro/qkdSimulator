@@ -8,7 +8,7 @@ from utils.colors import bcolors
 # Reception side of the interceptor: it reads (measures) the qubits emitted by
 # the sender. Attributes used here (STATES, lock, counters, apds...) are created
 # by the factory (see intercept.factory).
-class ReceptionMixin:
+class ReceptionMixin:        
 
     def detect_lost_qubit(self):
         """Détecte les qubits perdus : après tolerance_message_not_receive ms sans réception, marque le slot par un -1 dans les deux listes pour garder l'alignement base <-> bit
@@ -19,7 +19,7 @@ class ReceptionMixin:
                 if self.qubit_received == False:
                     self.measured_bits.append(-1)
                     self.chosen_bases.append(-1)  # keep basis <-> bit alignment
-                    self.received_qubit_count += 1
+                    self.slot += 1
                 self.qubit_received = False
 
     def already_receive_photon(self):
@@ -36,7 +36,7 @@ class ReceptionMixin:
         """
         # Cette fonction tourne grace a la clock mais est activé grace a "init"
         
-        if(self.received_qubit_count < self.message_size):
+        if(self.slot < self.message_size):
             chosen_basis = rng(0, 1)
             basis_state_0 = self.STATES[(0, chosen_basis)]
             basis_state_1 = self.STATES[(1, chosen_basis)]
@@ -49,7 +49,7 @@ class ReceptionMixin:
              sent_state (qutip.Qobj): qubit reçu par le canal
          """
          with self._lock:
-            if(self.received_qubit_count <= self.message_size):
+            if(self.slot <= self.message_size):
                 if(self.qubit_received == True):
                     self.already_receive_photon()
                 else:
@@ -61,7 +61,7 @@ class ReceptionMixin:
                     self.trigger_apd(sent_state)
 
                     self.qubit_received = True
-                    self.received_qubit_count += 1
+                    self.slot += 1
 
             else:
                 self.finished = True
@@ -93,3 +93,30 @@ class ReceptionMixin:
             value (int): bit lu par l'apd
         """
         self.measured_bits.append(value)
+
+
+
+    def eve_sifting(self, alice_bases : list[int], bob_bases : list[int]) -> list[int]:
+        """Sifting du point de vue d'Eve : elle ne garde que les bits mesurés là où Alice et Bob ont utilisé la même base.
+        Si Eve avait choisi une autre base qu'Alice et Bob, le bit conservé sera erroné (mauvaise base de lecture).
+
+        Petite particularité : dans le cas de l'attaque par time correlations, le sifting ne se fait pas aproprement parler.
+
+        Args:
+            eve: intercepteur (Eve) contenant ses bases et bits mesurés
+            alice_bases (list[int]): bases d'Alice révélées publiquement
+            bob_bases (list[int]): bases de Bob révélées publiquement
+
+        Returns:
+            list[int]: clé reconstruite par Eve
+        """
+        if(len(self.chosen_bases) != len(alice_bases)):
+            # Dans l'éventualité, ou la base n'a pas assez de bit, c'est srement parce que le(s) dernier(s) bits ne sont pas arrivé
+            while(len(self.chosen_bases) < self.message_size):
+                self.chosen_bases.append(-1)
+                self.measured_bits.append(-1)    
+        key = []
+        for i in range(len(self.chosen_bases)):
+            if(alice_bases[i] == bob_bases[i]):
+                key.append(self.measured_bits[i])
+        return key

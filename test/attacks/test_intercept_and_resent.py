@@ -11,7 +11,7 @@
 import pytest
 from manager_test import run_qkd
 
-ATTACK = "intercept_and_resent"
+ATTACK = "INTERCEPT_AND_RESENT"
 
 
 @pytest.mark.parametrize("perfect_apd", [True, False])

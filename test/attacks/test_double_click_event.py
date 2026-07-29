@@ -18,7 +18,7 @@
 import pytest
 from manager_test import run_qkd
 
-ATTACK = "DoubleClickEvent"
+ATTACK = "DOUBLE_CLICK_EVENT"
 
 def test_eve_connait_quasiment_toute_la_cle_sans_detection():
     r = run_qkd(attack=ATTACK, average_emitted_photon=-1, many_clicks_gestion="THROWS")

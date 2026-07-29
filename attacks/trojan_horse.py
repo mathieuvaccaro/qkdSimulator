@@ -61,7 +61,7 @@ class TrojanHorse(Intercept):
                 self.send_qubit(resent_qubit)
 
                 self.qubit_received = True
-                self.received_qubit_count += 1
+                self.slot += 1
 
     def emit_qubit(self, bit : int):
         """La fonction emit_qubit se lance de manière synchrone avec la clock commune (défini dans manager.py)

@@ -43,7 +43,7 @@ class Receiver:
         self.qubit_analyzed = False
         self.value_analyzed = [] # Bits déjà analysé dans le cas d'un double click event
         self.message_size = settings.message_size  # Nombre de qubit par QKD
-        self.received_qubit_count = 0
+        self.slot = 0
         self.communication_finished = threading.Event()
 
         self._lock = threading.Lock() # Just un mutex
@@ -58,8 +58,8 @@ class Receiver:
                     # Perte : soit le photon n'est jamais arrivé, soit l'APD ne l'a pas détecté
                     if len(self.chosen_bases) > 0:
                         self.chosen_bases[-1] = -1
-                self.received_qubit_count += 1          # <- une seule fois par tick
-                if self.received_qubit_count == self.message_size:
+                self.slot += 1          # <- une seule fois par tick
+                if self.slot == self.message_size:
                     self.close_communication()
                 self.qubit_received = False
                 self.qubit_analyzed = False
@@ -72,7 +72,7 @@ class Receiver:
 
     def prepare_bases(self):
         """On prépare chaque base en amont avant la réception du bit"""
-        if(self.received_qubit_count < self.message_size):
+        if(self.slot < self.message_size):
             self.chosen_bases.append(rng(0, 1))
 
     def receive_qubit(self, qubit : qutip.qobj):
@@ -82,14 +82,14 @@ class Receiver:
             qubit (qutip.qobj): qubit recu par le canal.
         """        
         with self._lock:
-            if(self.received_qubit_count < self.message_size):
+            if(self.slot < self.message_size):
                 # On mémorise le tick de ce qubit pour que read_value (appelé
                 # par le thread de l'APD) écrive le bit dans le bon slot.
                 self.pending_index = len(self.chosen_bases) - 1
                 self.trigger_apd(qubit)
 
                 self.qubit_received = True
-            if self.received_qubit_count == self.message_size:
+            if self.slot == self.message_size:
                 self.close_communication()
 
     def close_communication(self):

@@ -167,7 +167,7 @@ def run_communication() -> QkdResult:
     if eve is not None:
         # Eve exploite les bases d'Alice, publiques une fois la communication finie
         eve.resolve_knowledge(alice.chosen_bases)
-        key_eve = sifting.eve_sifting(eve, alice.chosen_bases, bob.chosen_bases)
+        key_eve = eve.eve_sifting(alice.chosen_bases, bob.chosen_bases)
 
     return QkdResult(alice, bob, eve, key_alice, key_bob, key_eve, final_key, qber_value)
 
@@ -184,7 +184,7 @@ def print_report(res: QkdResult):
 
     if(len(res.key_alice) != len(res.key_bob)):
         print(bcolors.FAIL + f"[ERROR] Alice and bob haven't same keys size ! ({len(res.key_alice)} vs {len(res.key_bob)})" + bcolors.ENDC)
-    elif(not res.keys_match):
+    elif(not res.keys_match): 
         print(bcolors.WARNING + f"[WARN] Alice and bob haven't same keys (taille = {len(res.key_alice)} et ({how_much_key_corrupted(res.key_alice, res.key_bob)}%)" + bcolors.ENDC)
     else:
         print(bcolors.OKGREEN + f"[GOOD] Alice and bob have same keys (taille de la clé : {len(res.key_alice)}!" + bcolors.ENDC)
@@ -194,10 +194,32 @@ def print_report(res: QkdResult):
     else:
         print(bcolors.FAIL + f"Qber is very high : {res.qber}. Communication aborting ..." + bcolors.ENDC)
 
+    print(bcolors.OKGREEN + f"c'est d ela triche mais la clé d'alice et bob est : {res.key_alice}")
+
     if(res.eve != None):
-        if(len(res.key_eve) != len(res.key_alice)):
-            print(bcolors.WARNING + f"Alice and Eve size's key aren't same :" + bcolors.ENDC)
-        print(bcolors.FAIL + f"Eve got {how_much_key_corrupted(res.final_key, res.key_eve)} % of Alice key" + bcolors.ENDC)
+
+        # Cas spécial : attaque statistique par correlationd etemps
+        # c'est un cas particulier parce que res.key_eve est un tableau de toutes les possibilités
+        if(settings.TIME_CORRELATION):
+            best_score = 0 # Equivalent a inf
+            best_key = None
+            for i in res.key_eve:
+                if(how_much_key_corrupted(res.final_key, i) > best_score):
+                    best_score = how_much_key_corrupted(res.final_key, i)
+                    best_key = i
+            print(bcolors.FAIL + f"Eve got (in best case) {best_score} % of Alice key" + bcolors.ENDC)
+            print(f"Eve's key : {best_key} vs final key : {res.final_key}")
+            if(best_key == None):
+                print("Euh ;")
+                print(res.key_eve)
+        # Attaque générale
+        else:
+            print(bcolors.FAIL + f"Eve got {how_much_key_corrupted(res.final_key, res.key_eve)} % of Alice key" + bcolors.ENDC)
+
+            if(len(res.key_eve) != len(res.key_alice)):
+                print(bcolors.WARNING + f"Alice and Eve size's key aren't same : ({len(res.key_alice)}/{len(res.key_eve)})" + bcolors.ENDC)
+
+       
 
 # Lancemnet classique
 if __name__ == "__main__":

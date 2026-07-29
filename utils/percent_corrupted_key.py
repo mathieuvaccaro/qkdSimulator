@@ -9,6 +9,8 @@ def how_much_key_corrupted(keyA : list[int], keyB : list[int]):
         _type_: Retourne le pourcentage de ressemblance des deux listes
     """    
     if(len(keyA) != len(keyB)):
+        print(f"Ouai euh non :{len(keyA)}/{len(keyB)}")
+        print( f"{keyA} VS {keyB}")
         return 0
     else:
         value = 0

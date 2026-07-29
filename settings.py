@@ -7,7 +7,7 @@ r"""
   \_____|_|\___/|_.__/ \__,_|_|
 """
 # Les paramètres globaux sotn aussi atifs pour les tests !
-message_size = 500 # Nombre de qubit échangé au total                              
+message_size = 300 # Nombre de qubit échangé au total                              
 message_interval = 4 # Intervale en ms entre chaque qubit échange (par défaut 4ms) [mettre uen valeur inféireur peut introduire des erreurs !]
 protocol = "bb84" # Protocole (pour l'instnat seulemetn bb84 est compatible)
 
@@ -57,10 +57,10 @@ r"""
  /_/    \_\_|    |_____/|___/
 """
 perfect_apd_bob = False # Mettre un apd parfait (écrase les valeurs suivante)
-perfect_apd_eve = False
+perfect_apd_eve = True
 breakdown_voltage = 7 # def : 7
-dead_time_min = 2 #def : 2 (en ms)
-dead_time_max = 6 # def : 6
+dead_time_min = 20 # def : 2 (en ms)
+dead_time_max = 60 # def : 6
 bias_voltage = 5 #def : 5
 gate_off_duration = message_interval/2 #def : message_interval/2
 gate_on_duration = message_interval/2 #def : message_interval/2
@@ -78,14 +78,20 @@ r"""
 # Mettre un flag d'attaque à True pour l'activer (une seule à la fois).
 # Eve n'est présente sur le canal que si une attaque est active.
 # Certaines attaques sont simulés réalistiquement (exemple PNS) tandis que d'autre sont simulés hypotétiquement (trojan horse). Les attaques simulés de manière réaliste ont un commentaire X a coté
-intercept_and_resent = False # X
+INTERCEPT_AND_RESENT = False # X
 
 PNS = False                  # X
 
-TrojanHorse = False
+TROJAN_HORSE = False
 
-DoubleClickEvent = False      # X
+DOUBLE_CLICK_EVENT = False      # X
 emission_click_event = 10
+
+# La complexité temporel de cette attaque est exponentielle. La limite (raisonable) est une taille de clé de 220
+# Nb : l'attaque a été concu dans le but "parfait" c'est à dire elle test toute les combinaison, cela est plus précis mais bien plus long
+# On peux parfaitement imaginer une version calculant uniquemnet certaines combinaison stratégique ce qui permet de gagner beaucoup en temps
+# Le problème est que ca fait 5 jours que je suis dessus et que je veux juste tout push et passer a autre chose
+TIME_CORRELATION = True         # X
 
 r"""
      /\                                   

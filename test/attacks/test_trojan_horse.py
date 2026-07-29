@@ -15,7 +15,7 @@
 import pytest
 from manager_test import run_qkd
 
-ATTACK = "TrojanHorse"
+ATTACK = "TROJAN_HORSE"
 TOLERANCE = 2 # Etant donné qu'il y a du bruit, on va tolérer quelques erreurs
 
 
