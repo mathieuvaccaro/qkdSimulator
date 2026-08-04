@@ -10,7 +10,7 @@ class SendingMixin:
         """
         if self.sent_qubit_count == 0:
             self.communication_in_progress = True
-        qubit = self.STATES[(bit, self.chosen_bases[len(self.chosen_bases)-1])]
+        qubit = self.STATES[(bit, self.chosen_bases[self.pending_index])]  # * base du slot courant (avant : dernier append)
 
         self.send_qubit(qubit)
         self.sent_qubit_count += 1

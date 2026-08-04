@@ -28,8 +28,9 @@ class Intercept(ReceptionMixin, SendingMixin):
         """
         # GLOBAL
         self.quantum_channel = quantum_channel
-        self.chosen_bases = []
-        self.measured_bits = []
+        self.chosen_bases = [-1] * settings.message_size 
+        self.measured_bits = [-1] * settings.message_size 
+        self.pending_index = -1
         self.clk = clk
         self.clk.subscribe(self.detect_lost_qubit)
         self.communication_finished = threading.Event()

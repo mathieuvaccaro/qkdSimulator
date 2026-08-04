@@ -34,7 +34,7 @@ class InterceptAndResent(Intercept):
                     self.already_receive_photon()
                 else:
                     chosen_basis = rng(0, 1)
-                    self.chosen_bases.append(chosen_basis)
+                    self.set_current_basis(chosen_basis)  # *
 
                     measured_bit = self.trigger_apd(qubit)
 

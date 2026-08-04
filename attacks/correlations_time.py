@@ -13,29 +13,14 @@ import settings
 from utils.colors import bcolors
 from utils.progress_bar import progress_bar
 
+import time
+
 
 class CorrelationTime(Intercept):
-    # * docstring entièrement réécrite ci-dessous (vs original)
-    """Attaque statistique par observation du temps (exploitation du dead time des APD de Bob).
-
-    Principe : les APD de Bob ont un dead time non nul (settings.dead_time_min/max, en ms) nétemment
-    supérieur à l'intervalle d'émission. Après une détection sur un détecteur (bit 0 OU bit 1),
-    ce détecteur reste aveugle pendant tout son dead time. Par conséquent, deux détections
-    successives séparées par un temps inférieur au dead time NE PEUVENT PAS provenir du même
-    détecteur : elles portent donc forcément deux bits opposés.
-
-    Eve est passive : elle se contente d'horodater chaque qubit puis de le réémettre
-    inchangé vers Bob (le QBER n'augmente pas, l'attaque est indétectable). Après le sifting
-    public, elle sait quels slots Bob a détectés (bob_bases[i] != -1) et lesquels ont été
-    conservés (alice_bases[i] == bob_bases[i]). En comparant les horodatages des détections
-    successives au dead time minimal, elle reconstruit des "chaînes" de bits alternés.
-
-    À l'intérieur d'une chaîne, tous les bits sont connus à une inversion globale près (2 candidats).
-    eve_sifting renvoie donc la liste des combinaisons possibles de la clé siftée ; manager.py
-    retient la meilleure (borne supérieure de la connaissance d'Eve).
-
-    Attention : l'énumération n'est pas bornée. Avec C chaînes, eve_sifting construit exactement
-    2^C clés candidates, on suppose donc ici une clé de petite taille (settings.message_size).
+    """
+    Principe : Dans l'éventualité ou les dead times des apds de bob sont nettement supérieur au taux d'émission, il est possible
+    d'obtenir des informations statistique de la clé
+    A NOTER QUE CETTE ATTAQUE EST UNE ATTAQUE STATISTIQUE, AINSI UNE LISTE DE CLE SONT RETOURNE (dont la vrai clé)
 
     QBER Estimé : 0%
     Connaissance de clé : 100% dans le meilleur cas (toutes les orientations étant énumérées,
@@ -108,6 +93,11 @@ class CorrelationTime(Intercept):
             list[list[int]]: liste des clés siftées candidates (même longueur que la clé siftée).
         """
 
+
+
+        # RQ : Ajouter un chronoomètre de temps maximum avant de retourner la liste des valuers actuelles (sinon les tests apd perfect vont prendre 30 ans et demie
+        # Peut etre ne pas tout triée mais que le plus ilmportant ?)
+
         # 1- On récupere que les bits siftés
         detections = []
         for i in range(len(bob_bases)):   # On prends la base de bob en référence, mais les bse d'alice et bob sont censé être identique
@@ -163,8 +153,9 @@ class CorrelationTime(Intercept):
         C = len(chains_present)
         resultats = []
 
-
         print("Elaboration de toutes les possibilités d'attaques, cela peut prendre du temps....")
+
+        start_time = time.perf_counter()
 
         for n in range(2 ** C):
 
@@ -185,6 +176,12 @@ class CorrelationTime(Intercept):
                     cle.append(bit_relatif)
 
             resultats.append(cle)
+            
+            actual_time = time.perf_counter()
 
+            # Trop de temps, on retounr ce qu'on a
+            if(actual_time - start_time >= settings.timing_attack): # L'écart est en secondes :) )  
+                print(bcolors.WARNING + f"Temps écoulé ({settings.timing_attack}s)" + bcolors.ENDC)
+                return resultats
 
         return resultats

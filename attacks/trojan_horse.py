@@ -36,7 +36,7 @@ class TrojanHorse(Intercept):
         Returns:
             int: base à utiliser (0 ou 1)
         """
-        if(len(self.chosen_bases) == 0):
+        if(len(self.alice.chosen_bases) == 0):  # * chosen_bases étant pré-allouée, on teste la source réellement lue
             return rng(0,1)
         return self.alice.chosen_bases[-1]
     
@@ -52,7 +52,7 @@ class TrojanHorse(Intercept):
             else:
                 # Eve a (supposement) récupérer la base de bob grâce a une impulsion lumineuse
                 chosen_basis = self.get_cible_basis()
-                self.chosen_bases.append(chosen_basis)
+                self.set_current_basis(chosen_basis)  # *
 
                 measured_bit = self.trigger_apd(sent_state)
 

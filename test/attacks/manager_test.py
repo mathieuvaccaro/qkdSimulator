@@ -17,7 +17,7 @@ _ATTACK_FLAGS = ("INTERCEPT_AND_RESENT", "PNS", "TROJAN_HORSE", "DOUBLE_CLICK_EV
 
 
 def run_qkd(*, attack=None, message_size=settings.message_size, message_interval=settings.message_interval,
-            average_emitted_photon=-1, perfect_apd=True, gate_off_duration = 0, gate_on_duration = 20,
+            average_emitted_photon=-1, perfect_apd=True, gate_off_duration = 0, dead_time_min = 2, dead_time_max = 6, gate_on_duration = 20,
             bit_loss=0.0, bit_flip=0.0, many_clicks_gestion="THROWS") -> QkdResult:
     """Lance un échange QKD complet et renvoie un `QkdResult`.
 
@@ -46,6 +46,8 @@ def run_qkd(*, attack=None, message_size=settings.message_size, message_interval
 
     settings.gate_off_duration = gate_off_duration
     settings.gate_on_duration = gate_on_duration
+    settings.dead_time_max = dead_time_max
+    settings.dead_time_min = dead_time_min
 
     settings.many_clicks_gestion = many_clicks_gestion
 

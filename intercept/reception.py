@@ -17,8 +17,7 @@ class ReceptionMixin:
         if(self.finished == False):
             with self._lock:
                 if self.qubit_received == False:
-                    self.measured_bits.append(-1)
-                    self.chosen_bases.append(-1)  # keep basis <-> bit alignment
+                    self.pending_index += 1
                     self.slot += 1
                 self.qubit_received = False
 
@@ -40,7 +39,21 @@ class ReceptionMixin:
             chosen_basis = rng(0, 1)
             basis_state_0 = self.STATES[(0, chosen_basis)]
             basis_state_1 = self.STATES[(1, chosen_basis)]
-            self.chosen_bases.append(int(chosen_basis))
+            self.set_current_basis(chosen_basis) 
+
+    def set_current_basis(self, chosen_basis : int):
+        """ Avance d'un slot et y enregistre la base de lecture choisie.
+
+        Les listes étant pré-allouées, on écrit à l'index courant au lieu de faire un append :
+        base et bit restent ainsi alignés même quand l'apd d'Eve ne déclenche pas (gate fermée
+        ou dead time en cours), cas où read_value n'est jamais appelée et où le -1 reste en place.
+
+        Args:
+            chosen_basis (int): base de lecture du slot courant (0 ou 1)
+        """
+        self.pending_index += 1
+        if(0 <= self.pending_index < len(self.chosen_bases)):
+            self.chosen_bases[self.pending_index] = int(chosen_basis)
 
     def receive_qubit(self, sent_state : qutip.Qobj):
          """Appelée par le canal quantique à l'arrivée d'un qubit : une base est tirée au sort et le qubit est mesuré dans cette base (base ET bit enregistrés ensemble)
@@ -54,7 +67,7 @@ class ReceptionMixin:
                     self.already_receive_photon()
                 else:
                     # Measure the qubit in the chosen basis
-                    if(len(self.chosen_bases) == 0):
+                    if(self.pending_index < 0):
                         return
                     
                   
@@ -75,8 +88,8 @@ class ReceptionMixin:
         Returns:
             int: bit mesuré (0 ou 1)
         """
-        basis_state_0 = self.STATES[(0, self.chosen_bases[-1])]
-        basis_state_1 = self.STATES[(1, self.chosen_bases[-1])]
+        basis_state_0 = self.STATES[(0, self.chosen_bases[self.pending_index])]  # * base du slot courant (avant : dernier append)
+        basis_state_1 = self.STATES[(1, self.chosen_bases[self.pending_index])]  # *
         measured_bit = qutip.measurement.measure(qubit,[qutip.ket2dm(basis_state_0), qutip.ket2dm(basis_state_1)])[0]
 
         if measured_bit == 0:
@@ -92,7 +105,8 @@ class ReceptionMixin:
         Args:
             value (int): bit lu par l'apd
         """
-        self.measured_bits.append(value)
+        if(0 <= self.pending_index < len(self.measured_bits)):
+            self.measured_bits[self.pending_index] = value 
 
 
 
@@ -110,11 +124,6 @@ class ReceptionMixin:
         Returns:
             list[int]: clé reconstruite par Eve
         """
-        if(len(self.chosen_bases) != len(alice_bases)):
-            # Dans l'éventualité, ou la base n'a pas assez de bit, c'est srement parce que le(s) dernier(s) bits ne sont pas arrivé
-            while(len(self.chosen_bases) < self.message_size):
-                self.chosen_bases.append(-1)
-                self.measured_bits.append(-1)    
         key = []
         for i in range(len(self.chosen_bases)):
             if(alice_bases[i] == bob_bases[i]):

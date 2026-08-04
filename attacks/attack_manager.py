@@ -26,3 +26,9 @@ def get_active_attack():
         if getattr(settings, flag, False):
             return attack_cls
     return None
+
+def get_specific_attack(attack):
+    for flag, attack_cls in ATTACK_REGISTRY:
+        if flag == attack:
+            return attack_cls
+    return None

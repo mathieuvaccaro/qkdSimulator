@@ -7,7 +7,7 @@ r"""
   \_____|_|\___/|_.__/ \__,_|_|
 """
 # Les paramètres globaux sotn aussi atifs pour les tests !
-message_size = 300 # Nombre de qubit échangé au total                              
+message_size = 200 # Nombre de qubit échangé au total                              
 message_interval = 4 # Intervale en ms entre chaque qubit échange (par défaut 4ms) [mettre uen valeur inféireur peut introduire des erreurs !]
 protocol = "bb84" # Protocole (pour l'instnat seulemetn bb84 est compatible)
 
@@ -59,8 +59,8 @@ r"""
 perfect_apd_bob = False # Mettre un apd parfait (écrase les valeurs suivante)
 perfect_apd_eve = True
 breakdown_voltage = 7 # def : 7
-dead_time_min = 20 # def : 2 (en ms)
-dead_time_max = 60 # def : 6
+dead_time_min = 2 # def : 2 (en ms)
+dead_time_max = 6 # def : 6
 bias_voltage = 5 #def : 5
 gate_off_duration = message_interval/2 #def : message_interval/2
 gate_on_duration = message_interval/2 #def : message_interval/2
@@ -92,6 +92,7 @@ emission_click_event = 10
 # On peux parfaitement imaginer une version calculant uniquemnet certaines combinaison stratégique ce qui permet de gagner beaucoup en temps
 # Le problème est que ca fait 5 jours que je suis dessus et que je veux juste tout push et passer a autre chose
 TIME_CORRELATION = True         # X
+timing_attack = 30 # Temps de l'attaque maximum en secodnes
 
 r"""
      /\                                   

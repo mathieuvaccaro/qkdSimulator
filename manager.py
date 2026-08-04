@@ -11,7 +11,7 @@ from components.apd import Apd
 from components.quantum_canal import QuantumCanal
 from components.receiver import Receiver
 from components.sender import Sender
-from attacks.attack_manager import get_active_attack
+from attacks.attack_manager import get_active_attack, get_specific_attack
 from utils.colors import bcolors
 from utils.percent_corrupted_key import how_much_key_corrupted
 
@@ -92,9 +92,11 @@ def _make_apd(linked_bit: int, perfect_apd : bool) -> Apd:
                dead_time_max=settings.dead_time_max)
 
 
-def build_communication():
+def build_communication(attack = None):
     """Câble tous les composants d'une communication (canal, clock, APDs, Alice, Bob, Eve). Aucun thread n'est lancé 
 
+    Args:
+        attack : l'attaque utilisé, utile uniquement pour le benchmark
     Returns:
         tuple: (alice, bob, eve, commune_clk, apds) ; eve vaut None si aucune attaque n'est active
     """
@@ -128,7 +130,11 @@ def build_communication():
     eve = None
 
     # Select attack
-    AttackClass = get_active_attack()
+    if(attack == None):
+        AttackClass = get_active_attack()
+    else:
+        AttackClass = get_specific_attack(attack)
+
     if AttackClass is not None:
         apd_eve0 = _make_apd(0, settings.perfect_apd_eve)
         apd_eve1 = _make_apd(1, settings.perfect_apd_eve)
@@ -142,9 +148,10 @@ def build_communication():
     return alice, bob, eve, commune_clk, apds
 
 
-def run_communication() -> QkdResult:
+def run_communication(attack = None) -> QkdResult:
     """Lance la communication complète
-
+    Args:
+        attack : attaque a utiisé, utile uniquemnet pourn les benchmarks
     Returns:
         QkdResult: clés d'Alice/Bob/Eve et métriques associées
     """
@@ -209,9 +216,6 @@ def print_report(res: QkdResult):
                     best_key = i
             print(bcolors.FAIL + f"Eve got (in best case) {best_score} % of Alice key" + bcolors.ENDC)
             print(f"Eve's key : {best_key} vs final key : {res.final_key}")
-            if(best_key == None):
-                print("Euh ;")
-                print(res.key_eve)
         # Attaque générale
         else:
             print(bcolors.FAIL + f"Eve got {how_much_key_corrupted(res.final_key, res.key_eve)} % of Alice key" + bcolors.ENDC)
@@ -219,12 +223,11 @@ def print_report(res: QkdResult):
             if(len(res.key_eve) != len(res.key_alice)):
                 print(bcolors.WARNING + f"Alice and Eve size's key aren't same : ({len(res.key_alice)}/{len(res.key_eve)})" + bcolors.ENDC)
 
-       
-
-# Lancemnet classique
+# Lancemenet classique
 if __name__ == "__main__":
     while(True):
         print("Initialisation en cours...")
         print("Lancement ...")
         print_report(run_communication())
         restart()
+
