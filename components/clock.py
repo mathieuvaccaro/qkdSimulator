@@ -2,6 +2,9 @@ import threading
 import time
 from typing import Callable
 
+
+
+
 """
 La clock permet la synchronisation de tout le projet, pour ajouter une fonction a la clock qui sera automatiquement appelé de manière synchrone il faut
 appele la fonction subscribe avec la fonction
@@ -61,10 +64,6 @@ class Clock:
             callbacks = list(self._callbacks)
         for fn in callbacks:
             fn()
-            #try:
-            #    fn()
-            #except Exception as e:
-            #    print(f"Erreur dans {fn.__name__}: {e}")
 
     def start(self):
         """Démarre la clock dans un thread dédié

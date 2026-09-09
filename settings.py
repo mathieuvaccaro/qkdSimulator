@@ -8,7 +8,7 @@ r"""
 """
 # Les paramètres globaux sotn aussi atifs pour les tests !
 message_size = 200 # Nombre de qubit échangé au total                              
-message_interval = 4 # Intervale en ms entre chaque qubit échange (par défaut 4ms) [mettre uen valeur inféireur peut introduire des erreurs !]
+message_interval = 20 # Intervale en ms entre chaque qubit échange (par défaut 4ms) [mettre uen valeur inféireur peut introduire des erreurs !]
 protocol = "bb84" # Protocole (pour l'instnat seulemetn bb84 est compatible)
 
 r"""
@@ -20,7 +20,7 @@ r"""
  |_____/ \___|_| |_|\__,_|\___|_|   
 """
  
-average_emitted_photon = -1 # Nombre de moyen de photon émis par le sender (suit une loi de poisson). -1 = toujours 1 photon (désactive PNS !)
+average_emitted_photon = 1 # Nombre de moyen de photon émis par le sender (suit une loi de poisson). -1 = toujours 1 photon (désactive PNS !)
                                     
 r"""
    _____                  _    _                     
@@ -32,8 +32,8 @@ r"""
 """
 #La somme ne doit pas dépasser 100 (Remaruqe, les pourcentage sont cumulés (si il y a 50% de bit loss et 50% de bit flip tous les bits transmis seront faussé !))"""
 # Possible de mettre au plus deux décimal
-quantum_canal_bit_loss = 0.00
-quantum_canal_bit_flip = 0.00                                                  
+quantum_canal_bit_loss = 2.00
+quantum_canal_bit_flip = 2.00                                                  
 
 r"""
   _____               _                            ____  _               
@@ -59,12 +59,13 @@ r"""
 perfect_apd_bob = False # Mettre un apd parfait (écrase les valeurs suivante)
 perfect_apd_eve = True
 breakdown_voltage = 7 # def : 7
-dead_time_min = 2 # def : 2 (en ms)
-dead_time_max = 6 # def : 6
+dead_time_min = 20 # def : 2 (en ms)
+dead_time_max = 60 # def : 6
 bias_voltage = 5 #def : 5
 gate_off_duration = message_interval/2 #def : message_interval/2
 gate_on_duration = message_interval/2 #def : message_interval/2
-many_clicks_gestion = "THROWS" # Gestion des double click ("THROWS" -> Tous les bits sont jeté, "RANDOM" -> Le bit est choisi au hasard)
+many_clicks_gestion = "RANDOM" # Gestion des double click ("THROWS" -> Tous les bits sont jeté, "RANDOM" -> Le bit est choisi au hasard)
+after_pulsing = 0 # Pourcentage de chance d'avoir un after pulsing (un photon rester piégé qui va ré-actionner une avalanche)
 
 r"""
           _   _             _        
@@ -82,17 +83,17 @@ INTERCEPT_AND_RESENT = False # X
 
 PNS = False                  # X
 
-TROJAN_HORSE = False
+TROJAN_HORSE = True
 
-DOUBLE_CLICK_EVENT = False      # X
+DOUBLE_CLICK_EVENT = True      # X
 emission_click_event = 10
 
 # La complexité temporel de cette attaque est exponentielle. La limite (raisonable) est une taille de clé de 220
 # Nb : l'attaque a été concu dans le but "parfait" c'est à dire elle test toute les combinaison, cela est plus précis mais bien plus long
 # On peux parfaitement imaginer une version calculant uniquemnet certaines combinaison stratégique ce qui permet de gagner beaucoup en temps
 # Le problème est que ca fait 5 jours que je suis dessus et que je veux juste tout push et passer a autre chose
-TIME_CORRELATION = True         # X
-timing_attack = 30 # Temps de l'attaque maximum en secodnes
+TIME_CORRELATION = False         # X
+timing_attack = 300 # Temps de l'attaque maximum en secodnes
 
 r"""
      /\                                   

@@ -153,14 +153,16 @@ class Receiver:
 
         # Plusieurs bits ont été analysé
         else:
-            if(settings.many_clicks_gestion == "THROWS"):
-                self.chosen_bases[-1] = -1
-                pass
-            elif(settings.many_clicks_gestion == "RANDOM"):
-                r = random.randint(0, len(self.value_analyzed)-1)
-                self.measured_bits[self.pending_index] = self.value_analyzed[r]
-            else:
-                raise Exception(f"[ERROR] - Paramètre {settings.many_clicks_gestion} non reconnu !")
+            # On est sur une attaque par double click. les bits recus sont donc volontiare on suppose que les 
+            if(settings.DOUBLE_CLICK_EVENT):
+                if(settings.many_clicks_gestion == "THROWS"):
+                    self.chosen_bases[-1] = -1
+                    pass
+                elif(settings.many_clicks_gestion == "RANDOM"):
+                    r = random.randint(0, len(self.value_analyzed)-1)
+                    self.measured_bits[self.pending_index] = self.value_analyzed[r]
+                else:
+                    raise Exception(f"[ERROR] - Paramètre {settings.many_clicks_gestion} non reconnu !")
         # Dans tous les cas on incrémente le compteur ;)
         self.pending_index+=1
         # Et on reset la liste des valeurs

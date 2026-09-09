@@ -15,14 +15,17 @@ from utils.progress_bar import progress_bar
 
 import time
 
+"""
+Il y a actuellement un problème avec cette attaque. Ayant une taille de clé trop longue, et le temps de calcul nécessaire étant 
+"""
 
 class CorrelationTime(Intercept):
     """
     Principe : Dans l'éventualité ou les dead times des apds de bob sont nettement supérieur au taux d'émission, il est possible
     d'obtenir des informations statistique de la clé
-    A NOTER QUE CETTE ATTAQUE EST UNE ATTAQUE STATISTIQUE, AINSI UNE LISTE DE CLE SONT RETOURNE (dont la vrai clé)
+    A NOTER QUE CETTE ATTAQUE EST UNE ATTAQUE STATISTIQUE, AINSI UNE LISTE DE CLE SONT RETOURNE
 
-    QBER Estimé : 0%
+    QBER Estimé : dépend des conditions extérieur
     Connaissance de clé : 100% dans le meilleur cas (toutes les orientations étant énumérées,
         la vraie clé siftée figure forcément parmi les candidates)
     Détectable : Non
@@ -147,13 +150,9 @@ class CorrelationTime(Intercept):
         # possibilités, c'est au manager de regarder si la clé est contenue.
         # Par exemple : Sifted = [(1, 0), (1, 1), (6, 0)] le résultat est [(0, 1, 0) ; (0, 1, 1) ; (1, 0, 0) ; (1, 0, 1)]
         
-        # REMARQUE : Après quatre jours (soit quasiment 30h) de code a rester bloqué sur cette putain de section, j'ai craqué
-        # La section suivante a donc été codée par Claude AI, Cordialement
-
         C = len(chains_present)
         resultats = []
 
-        print("Elaboration de toutes les possibilités d'attaques, cela peut prendre du temps....")
 
         start_time = time.perf_counter()
 
@@ -181,7 +180,7 @@ class CorrelationTime(Intercept):
 
             # Trop de temps, on retounr ce qu'on a
             if(actual_time - start_time >= settings.timing_attack): # L'écart est en secondes :) )  
-                print(bcolors.WARNING + f"Temps écoulé ({settings.timing_attack}s)" + bcolors.ENDC)
+                #print(bcolors.WARNING + f"Temps écoulé ({settings.timing_attack}s)" + bcolors.ENDC)
                 return resultats
 
         return resultats

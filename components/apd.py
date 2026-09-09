@@ -1,6 +1,7 @@
 import components.clock as clock  # We use clock.py
 from utils.colors import bcolors
 import random
+import settings
 
 """
 Un apd permet "simplement" la lecture d'un photon, il fonctionne d'une manière particulière (cf. rapport)
@@ -30,7 +31,7 @@ class Apd:
         linked_bit         : bit associé au détecteur (0 ou 1)
         breakdown_voltage  : V_br (in V)
         dead_time_min/_max          : dead time, en ms
-        bias_voltage       : V_dc < V_br  /!\  (tension constante)
+        bias_voltage       : V_dc < V_br  /!  (tension constante)
         gate_voltage       : tension ajouté durant le mode geiger
         gate_on_duration   : Durée (en ms) durant laquel la détection est Actif
         gate_off_duration  : Durée (en ms) durant laquel la détection est Inactif
@@ -42,13 +43,7 @@ class Apd:
 
     def __init__(self, linked_bit, breakdown_voltage=7, dead_time_min=3, dead_time_max = 5,
                  bias_voltage=5, gate_voltage=5,
-                 gate_off_duration=20, gate_on_duration=20, clock_period=10):
-
-        # Geiger mode requires V_dc + V_gate STRICTLY above the breakdown voltage.
-        if bias_voltage + gate_voltage <= breakdown_voltage:
-            raise ValueError(
-                "bias_voltage + gate_voltage doit etre > breakdown_voltage"
-            )
+                 gate_off_duration=20, gate_on_duration=20, clock_period=10, after_pulsing_proba = 3):
 
         self.mode = "linear"
         self.bias_voltage = bias_voltage
@@ -71,7 +66,9 @@ class Apd:
         self.gate_open = False  # True while the detection window is open
 
         self.gate_timer = 0
-
+        self.compteur = 0
+        self.after_pulsing_event = False # Est ce que la prochaine période ouverte sera un after pulsign ??
+        self.after_pulsing_proba = after_pulsing_proba
         # dead time change a chaque photon recu
         # Si dead_time_elapsed >= dead_time -> la détection est actif
         # Si dead_time_elapsed <  dead_time -> la détection est inactif
@@ -95,7 +92,14 @@ class Apd:
         self.clk.subscribe(self.update_voltage)
         self.clk.subscribe(self.update_mode)
         self.clk.subscribe(self.update_dead_time)
+        self.clk.subscribe(self.check_afterpulsing)
         self.clk.start()
+
+    def check_afterpulsing(self):
+        """Juste une fonction qui regarde si on est dnas un after pulsing et qui va essayer d'acceder a la fonction receive photon jusqu'à ce que les conditions soient alignés
+        """        
+        if self.after_pulsing_event:
+            self.receive_photon()
 
     def update_mode(self):
         """On va mettre à jour le mode en fonction du voltage actuelle. (indirectement, si la tension de gate à été ajouté ou non)
@@ -131,13 +135,21 @@ class Apd:
     def receive_photon(self):
         """Réception + détection du photon. Appelé depuis la classe reception.
         La détection utilise l'état de la gate à l'instant exact de la réception.
-        """
 
+        De plus on va calculer la proba d'avoir un after pulsing pour la prochaine gate open (on le fait ici étant donné que c'est la seule fonciton asynchrone)
+        """
         if(self.gate_open and self.mode == "geiger" and self.dead_time_elapsed >= self.dead_time):
+            self.compteur += 1
+
             self.dead_time_elapsed = 0  # start the dead time
             self.dead_time = round(random.uniform(self.dead_time_min, self.dead_time_max), 2) # Mise a jour du nouveau dead time
 
             self.parent.read_value(self.linked_bit)
+
+            # Afterpulsing checking
+            r = random.randint(0, 100)
+            self.after_pulsing_event = True if r < settings.after_pulsing else False
+
 
     def run(self):
         """Lance la simulation de l'apd en démarrant sa clock interne

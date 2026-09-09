@@ -17,6 +17,11 @@ from utils.percent_corrupted_key import how_much_key_corrupted
 
 """
 Le simulateur fonctionne grâce a une clock global. Dans un cas réel il faudrait utilisé deux clocks distinctes synchronisé, mais bon personne n'est parfait....
+
+
+Remarque : actuellement l'afterpulsing est mis en parallèle du mode gated. Normalement le mode gated est résistant à l'after pulsing (grace au deadtime)
+cependnat dans notre cas, on va omettre ce détail afin de pouvoir illustrer l'after pulsi,ng ET le dead time
+Note : ce serait bien d'ajouter une option pour dire si on active ou non le dead time afin de voir son impact sur l'after piulsing et donc le sattaques associés
 """
 
 
