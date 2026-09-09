@@ -18,7 +18,10 @@ _ATTACK_FLAGS = ("INTERCEPT_AND_RESENT", "PNS", "TROJAN_HORSE", "DOUBLE_CLICK_EV
 
 def run_qkd(*, attack=None, message_size=settings.message_size, message_interval=settings.message_interval,
             average_emitted_photon=-1, perfect_apd=True, gate_off_duration = 0, dead_time_min = 2, dead_time_max = 6, gate_on_duration = 20,
-            bit_loss=0.0, bit_flip=0.0, many_clicks_gestion="THROWS") -> QkdResult:
+            bit_loss=0.0, bit_flip=0.0, many_clicks_gestion="THROWS",
+            perfect_apd_eve=settings.perfect_apd_eve, emission_click_event=settings.emission_click_event,
+            timing_attack=settings.timing_attack, qber_percent=settings.qber_percent,
+            after_pulsing=settings.after_pulsing, progress_bar=False) -> QkdResult:
     """Lance un échange QKD complet et renvoie un `QkdResult`.
 
     Args:
@@ -30,6 +33,15 @@ def run_qkd(*, attack=None, message_size=settings.message_size, message_interval
         perfect_apd: True = APD parfait ; False = configuration réaliste (avec pertes).
         bit_loss / bit_flip: bruit du canal quantique, en % (0 à 100).
         timeout: sécurité anti-blocage, en secondes.
+        perfect_apd_eve: True = les apds d'Eve sont parfaits (elle a la meilleure techno).
+        emission_click_event: nombre de photons réémis par Eve (attaque double click).
+        timing_attack: budget de temps d'Eve pour l'énumération (attaque time correlation), en s.
+        qber_percent: part des bits siftés sacrifiés pour estimer le qber, en %.
+        after_pulsing: probabilité d'un after pulsing sur les apds, en %.
+        progress_bar: affichage de la barre de progression (coupée par défaut).
+
+    Les valeurs par défaut sont celles de settings.py au moment de l'import : un paramètre
+    non passé vaut donc toujours la même chose, même après plusieurs appels d'affilée.
 
     Returns:
         QkdResult: clés d'Alice/Bob/Eve et métriques (QBER, connaissance d'Eve...).
@@ -42,7 +54,13 @@ def run_qkd(*, attack=None, message_size=settings.message_size, message_interval
     settings.perfect_apd_bob = perfect_apd
     settings.quantum_canal_bit_loss = bit_loss
     settings.quantum_canal_bit_flip = bit_flip
-    settings.progress_bar = False  # pas de barre de progression pendant les tests
+    settings.progress_bar = progress_bar  # pas de barre de progression pendant les tests
+
+    settings.perfect_apd_eve = perfect_apd_eve
+    settings.emission_click_event = emission_click_event
+    settings.timing_attack = timing_attack
+    settings.qber_percent = qber_percent
+    settings.after_pulsing = after_pulsing
 
     settings.gate_off_duration = gate_off_duration
     settings.gate_on_duration = gate_on_duration
