@@ -143,12 +143,8 @@ class Receiver:
         if(self.pending_index == None):
             return
 
-        # Aucun bit n'a été analysé
-        if(len(self.value_analyzed) == 0):
-            pass
-
         # Un seul bit a été détecte
-        elif(len(self.value_analyzed) == 1):
+        if(len(self.value_analyzed) == 1):
             self.measured_bits[self.pending_index] = self.value_analyzed[0]
 
         # Plusieurs bits ont été analysé
@@ -161,6 +157,8 @@ class Receiver:
                 elif(settings.many_clicks_gestion == "RANDOM"):
                     r = random.randint(0, len(self.value_analyzed)-1)
                     self.measured_bits[self.pending_index] = self.value_analyzed[r]
+                elif(settings.many_clicks_gestion == "NONE"):
+                    pass
                 else:
                     raise Exception(f"[ERROR] - Paramètre {settings.many_clicks_gestion} non reconnu !")
         # Dans tous les cas on incrémente le compteur ;)

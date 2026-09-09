@@ -8,7 +8,7 @@ r"""
 """
 # Les paramètres globaux sotn aussi atifs pour les tests !
 message_size = 200 # Nombre de qubit échangé au total                              
-message_interval = 20 # Intervale en ms entre chaque qubit échange (par défaut 4ms) [mettre uen valeur inféireur peut introduire des erreurs !]
+message_interval = 5 # Intervale en ms entre chaque qubit échange (par défaut 4ms) [mettre uen valeur inféireur peut introduire des erreurs !]
 protocol = "bb84" # Protocole (pour l'instnat seulemetn bb84 est compatible)
 
 r"""
@@ -20,7 +20,7 @@ r"""
  |_____/ \___|_| |_|\__,_|\___|_|   
 """
  
-average_emitted_photon = 1 # Nombre de moyen de photon émis par le sender (suit une loi de poisson). -1 = toujours 1 photon (désactive PNS !)
+average_emitted_photon = -1 # Nombre de moyen de photon émis par le sender (suit une loi de poisson). -1 = toujours 1 photon (désactive PNS !)
                                     
 r"""
    _____                  _    _                     
@@ -32,7 +32,7 @@ r"""
 """
 #La somme ne doit pas dépasser 100 (Remaruqe, les pourcentage sont cumulés (si il y a 50% de bit loss et 50% de bit flip tous les bits transmis seront faussé !))"""
 # Possible de mettre au plus deux décimal
-quantum_canal_bit_loss = 2.00
+quantum_canal_bit_loss = 0.00
 quantum_canal_bit_flip = 2.00                                                  
 
 r"""
@@ -44,7 +44,7 @@ r"""
  |_|  \_\___|\___\___|_| \_/ \___|_|     \___/\/  \___\_\_.__/ \___|_|   
 """
 
-tolerance_message_not_receive = message_interval-0.2 # Temps en ms a attendre avant de déclarer le qubit perdu (il ne faut pas que cette valeur soit supérieur à message_interval !)
+tolerance_message_not_receive = message_interval-0.1 # Temps en ms a attendre avant de déclarer le qubit perdu (il ne faut pas que cette valeur soit supérieur à message_interval !)
 qber_percent = 20 # Part en % des bits siftés utilisés pour le calcul du qber
 qber_tolerance = 11 # Tolérance du qber (par défaut 11% pour BB84)                                                         
 
@@ -56,15 +56,15 @@ r"""
   / ____ \| |    | |__| \__ \
  /_/    \_\_|    |_____/|___/
 """
-perfect_apd_bob = False # Mettre un apd parfait (écrase les valeurs suivante)
+perfect_apd_bob = True # Mettre un apd parfait (écrase les valeurs suivante)
 perfect_apd_eve = True
 breakdown_voltage = 7 # def : 7
-dead_time_min = 20 # def : 2 (en ms)
-dead_time_max = 60 # def : 6
+dead_time_min = 2 # def : 2 (en ms)
+dead_time_max = 6 # def : 6
 bias_voltage = 5 #def : 5
 gate_off_duration = message_interval/2 #def : message_interval/2
 gate_on_duration = message_interval/2 #def : message_interval/2
-many_clicks_gestion = "RANDOM" # Gestion des double click ("THROWS" -> Tous les bits sont jeté, "RANDOM" -> Le bit est choisi au hasard)
+many_clicks_gestion = "NONE" # Gestion des double click ("THROWS" -> Tous les bits sont jeté, "RANDOM" -> Le bit est choisi au hasard, "NONE" -> Le premier bit est récupérer les autres sont ignorés)
 after_pulsing = 0 # Pourcentage de chance d'avoir un after pulsing (un photon rester piégé qui va ré-actionner une avalanche)
 
 r"""
@@ -85,7 +85,7 @@ PNS = False                  # X
 
 TROJAN_HORSE = True
 
-DOUBLE_CLICK_EVENT = True      # X
+DOUBLE_CLICK_EVENT = False      # X
 emission_click_event = 10
 
 # La complexité temporel de cette attaque est exponentielle. La limite (raisonable) est une taille de clé de 220
