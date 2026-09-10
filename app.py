@@ -1,17 +1,4 @@
-"""
-QKD Simulator - PySide6 frontend
---------------------------------
-Interface graphique PySide6 pour le simulateur QKD / BB84.
 
-À placer dans un dossier `frontend/` à la racine du repo backend.
-Lancer avec :
-    python frontend/app.py
-
-Le front appelle le backend réel si `manager.py` et `settings.py`
-sont disponibles dans le dossier parent. S'ils sont absents ou si le backend
-plante, l'interface affiche une erreur au lieu de fabriquer un faux résultat.
-Le processus backend n'a pas de timeout côté front : il peut être arrêté manuellement.
-"""
 
 from __future__ import annotations
 
@@ -303,17 +290,6 @@ def backend_error_result(config: SimulationConfig, reason: str, detail: str | No
     )
 
 def _repo_root_candidates() -> list[Path]:
-    """Possible backend roots.
-
-    The frontend is usually in ``repo/frontend/app.py``, but during tests it is
-    easy to place it one folder too deep, for example
-    ``repo/qkd_frontend_xxx/frontend/app.py``.  We therefore scan all parents of
-    both this file and the current working directory instead of only checking
-    one parent.
-
-    You can also force the path with the environment variable
-    ``QKD_BACKEND_ROOT=/path/to/qkdSimulator``.
-    """
     here = Path(__file__).resolve()
     cwd = Path.cwd().resolve()
     candidates: list[Path] = []
